@@ -33,3 +33,13 @@ hist['epoch'] = history.epoch
 hist.tail()
 #%%
 mlp1.plot_loss()
+#%%
+model.summary()
+#%%
+model.evaluate(test)
+#%%
+y_pred = model.predict(test)
+plt.plot(range(200), df["x+5"][1000:])
+# plt.plot(range(200), y_pred)
+plt.xlabel('Time')
+plt.ylabel('Time series')
