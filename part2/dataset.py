@@ -1,13 +1,14 @@
 
 import tensorflow as tf
 import pandas as pd
+import numpy as np
 
 class MackeyGlass():
-    def __init__(self, x0=1.5, nb_samples=1200, start=301, end=1500):
-        self.x0 = 1.5
-        self.nb_samples = 1200
-        self.start = 301
-        self.end = 1500
+    def __init__(self, x0=1.5, n_samples=1200, start=301, end=1500):
+        self.x0 = x0
+        self.n_samples = n_samples
+        self.start = start
+        self.end = end
         self.x = None
         self.df = None
 
@@ -37,8 +38,6 @@ class MackeyGlass():
             "x-0": [],
             "x+5": []
         }
-        self.input, self.output = [[] for _ in range(
-            self.nb_samples + 1)], [0] * (self.nb_samples + 1)
         for t in range(self.start, self.end+1):
             for i in range(0, 21, 5):
                 data[f'x-{i}'].append(x[t-i])
@@ -49,13 +48,31 @@ class MackeyGlass():
         self.df.to_csv("data/mackey_glass.csv")
         return self.df
 
-    def get_df(self):
-        self.df = pd.read_csv("data/mackey_glass.csv")
+    def create_df(self):
+        x = self.generate_x()
+        data = {
+            "features": [],
+            "label": []
+        }
+        for t in range(self.start, self.end+1):
+            data["features"].append(
+                np.array([x[t-20], x[t-15], x[t-15], x[t-10], x[t-5], x[t]]))
+            data["label"].append(x[t+5])
+
+        df = pd.DataFrame(data=data)
+        df.to_csv("data/mackey_glass_features_label.csv")
+        return df
+
+    def get_df(self, file_name="data/mackey_glass.csv"):
+        self.df = pd.read_csv(file_name)
         return self.df
 
-    def get_train_val_test(self, ):
-        df = self.get_df()
-        train, validation, test = df[:900], df[900:1000], df[1000:]
+    def split_train_val_test(self, df):
+        self.train_df, self.validation_df, self.test_df = df[:900], df[900:1000], df[1000:]
+        return self.train_df, self.validation_df, self.test_df
+
+    def split_train_val_test_tf(self):
+        train, validation, test = self.split_train_val_test(self.get_df())
         features = ["x-20", "x-15", "x-10", "x-5", "x-0"]
         self.train_set = (
             tf.data.Dataset.from_tensor_slices(
