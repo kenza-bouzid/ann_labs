@@ -32,7 +32,6 @@ def perceptron_learning(X, labels, lr=0.001, max_iters=100, seed=42):
             axis=0)
         weights += lr*weight_update
         it_num += 1
-        print(weight_update, np.any(weight_update != 0))
 
         if it_num >= max_iters:
           print('Warning: reached maximum numbers of iterations.')
