@@ -14,11 +14,11 @@ def compute_decision_boudary(w, bias):
     z = -(w1/w2)*y - (b / w2)
     return y,z
 #### for now only usefull if we have 2-dim data ####
-def plot_boundarys(weight_history,X,y,typ, lr, bias=1):
+def plot_boundarys(weight_history,X,y,typ,batch, lr,update_size=0.1,start_size=0.1, bias=1):
     '''plots all boundarys according to the history of the weights'''
-    linewidth=0.1
+    linewidth=start_size
     for w in weight_history[:-1]:
-        linewidth += 0.1
+        linewidth += update_size
         y1,z = compute_decision_boudary(w, bias)
         plt.plot(y1,z,color='darkblue',linewidth=linewidth)
     y1,z = compute_decision_boudary(weight_history[-1], bias)
@@ -26,5 +26,5 @@ def plot_boundarys(weight_history,X,y,typ, lr, bias=1):
     plt.scatter(X[:,0],X[:,1],c=y)
     plt.xlabel(r'$x_1$')
     plt.ylabel(r'$x_2$')
-    plt.title(f'lr = {lr}, type = {typ}')
+    plt.title(f'lr = {lr}, type = {typ}, {batch} learning')
     plt.show()
