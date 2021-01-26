@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def delta_rule(X, labels, lr=0.001, max_iters=20, seed=42, sequential=0,threshold=10e-4):
+def delta_rule(X, labels, lr=0.001, max_iters=20, seed=42, sequential=0,threshold=10e-3):
     # add bias
     X = np.c_[X, np.ones(X.shape[0])]
 
@@ -30,3 +30,5 @@ def delta_rule(X, labels, lr=0.001, max_iters=20, seed=42, sequential=0,threshol
             print('break after iteration {}'.format(_))
             break
     return weights, weight_history
+
+
