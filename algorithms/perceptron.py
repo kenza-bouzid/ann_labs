@@ -23,8 +23,10 @@ def perceptron_learning(X, labels, lr=0.001, max_iters=100, seed=42):
 
     it_num = 0
     weights = np.random.default_rng(seed).normal(0, 0.5, dim_num)
+    weight_history = list()
     weight_update = np.ones((1, dim_num))
     while np.any(weight_update != 0):
+        weight_history.append(weights.copy())
         weight_update = np.sum(
             list(
                 map(
@@ -38,4 +40,4 @@ def perceptron_learning(X, labels, lr=0.001, max_iters=100, seed=42):
           break
 
     print(f'Number of epochs: {it_num}')
-    return weights
+    return weights, weight_history
