@@ -4,10 +4,17 @@ import mlp as mlp
 import pandas as pd
 import importlib
 import matplotlib.pyplot as plt
+import tensorflow as tf
 #%%
 importlib.reload(ds)
 mg = ds.MackeyGlass()
 df = mg.create_pandas_df()
+# %%
+## Checking gpu setup
+device_name = tf.test.gpu_device_name()
+if device_name != '/device:GPU:0':
+  print('GPU device not found')
+print('Found GPU at: {}'.format(device_name))
 # %%
 df.head()
 #%%
@@ -25,7 +32,8 @@ mlp1 = mlp.MLP()
 model = mlp1.set_model()
 mlp1.compile()
 #%%
-history = mlp1.train(train, val, epochs=10)
+with tf.device('/device:GPU:0'):
+    history = mlp1.train(train, val, epochs=10)
 
 #%%
 hist = pd.DataFrame(history.history)
