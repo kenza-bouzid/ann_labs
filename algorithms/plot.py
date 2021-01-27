@@ -42,5 +42,5 @@ def plot_boundarys_ex3(weight_history,X,y,typ,split_type,update_size=0.1,start_s
     plt.scatter(X[:,0],X[:,1],c=y)
     plt.xlabel(r'$x_1$')
     plt.ylabel(r'$x_2$')
-    plt.title(f'type = {typ}, removed {split_type}, ')
+    plt.title(f'type = {typ}, removed {split_type}')
     plt.show()
