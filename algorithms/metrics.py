@@ -1,4 +1,6 @@
 
+import numpy as np 
+
 def class_accuracy(y, y_pred, class_label=1):
   class_samples_num = (y == class_label).sum()
   correclty_predicted_samples_num = ((y_pred == class_label) & (y_pred == y)).sum()
