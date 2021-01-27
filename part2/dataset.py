@@ -48,20 +48,20 @@ class MackeyGlass():
         self.df.to_csv("data/mackey_glass.csv")
         return self.df
 
-    def create_df(self):
+    def get_data(self):
         x = self.generate_x()
-        data = {
-            "features": [],
-            "label": []
-        }
+        features = []
+        labels = []
+        
         for t in range(self.start, self.end+1):
-            data["features"].append(
-                np.array([x[t-20], x[t-15], x[t-15], x[t-10], x[t-5], x[t]]))
-            data["label"].append(x[t+5])
+            features.append(
+                np.array([x[t-20], x[t-15], x[t-10], x[t-5], x[t]],  dtype="float32"))
+            labels.append(x[t+5])
 
-        df = pd.DataFrame(data=data)
-        df.to_csv("data/mackey_glass_features_label.csv")
-        return df
+        features = np.array(features, dtype="float32")
+        labels = np.array(labels, dtype="float32")
+
+        return features, labels
 
     def get_df(self, file_name="data/mackey_glass.csv"):
         self.df = pd.read_csv(file_name)
