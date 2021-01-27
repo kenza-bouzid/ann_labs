@@ -1,6 +1,7 @@
 #%%
 import dataset as ds
 import mlp as mlp
+import hparam_tuning as ht
 import numpy as np
 import pandas as pd
 import importlib
@@ -30,14 +31,15 @@ plt.xlabel('Time')
 plt.ylabel('Time series')
 #%%
 importlib.reload(mlp)
-mlp1 = mlp.MLP()
+mlp1 = mlp.MLP(X_train, y_train, X_val, y_val, X_test, y_test)
 model = mlp1.set_model()
 mlp1.compile()
+
 #%%
 
 #%%
 with tf.device('/device:GPU:0'):
-    history = mlp1.train(X_train, y_train, X_val, y_val, epochs=1000)
+    history = mlp1.train(epochs=10)
 
 #%%
 hist = pd.DataFrame(history.history)
@@ -57,4 +59,9 @@ plt.xlabel('Time')
 plt.ylabel('Time series')
 plt.legend()
 #%%
-y_pred
+# HYPERPARAM TUNING
+importlib.reload(ht)
+tuning = ht.HparamTuning(X_train, y_train, X_val, y_val, X_test, y_test)
+#%%
+with tf.device('/device:GPU:0'):
+  tuning.run_hparam_tuning()
