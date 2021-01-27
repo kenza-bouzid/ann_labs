@@ -16,6 +16,7 @@ class TwoLP:
         self.output_weights_history = []
         self.output_weights_history.append(self.output_weights)
         self.MSE = []
+        self.MSE_val = []
 
     def activation_function(self, X):
         return 2/(1 + np.exp(-X)) - 1
@@ -48,9 +49,12 @@ class TwoLP:
         delta_h = delta_h[:self.nodes_num, :]
         return delta_o, delta_h
 
-    def train(self, X, y, epochs=100):
+    def train(self, X, y, X_test=[], y_test=[], verbose=False, epochs=100):
         # add bias
         X = np.c_[X, np.ones(X.shape[0])]
+        if X_test != []:
+            X_test = np.c_[X_test, np.ones(X_test.shape[0])]
+            X_test = X_test.T
 
         # make row represent one dimension (as in the instruction)
         X = X.T
@@ -59,9 +63,13 @@ class TwoLP:
         d_output = np.zeros((self.output_dim, self.nodes_num+1))
         for epoch in range(epochs):
             hout, out = self.forward_pass(X)
+            if X_test != []:
+                _, y_pred = self.forward_pass(X_test)
+                self.MSE_val.append(0.5 * np.mean((y_pred - y_test)**2)) 
             mse = 0.5 * np.mean((out - y)**2)
             self.MSE.append(mse)
             delta_o, delta_h = self.backward_pass(hout, out, y)
             d_hidden, d_output = self.weight_update(
                 delta_o, delta_h, d_hidden, d_output, X, hout)
-            print(f'Epoch {epoch}, MSE:{mse}')
+            if not verbose:
+                print(f'Epoch {epoch}, MSE:{mse}')
