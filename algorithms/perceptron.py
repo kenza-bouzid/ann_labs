@@ -36,8 +36,19 @@ def perceptron_learning(X, labels, lr=0.001, max_iters=100, seed=42):
         it_num += 1
 
         if it_num >= max_iters:
-          print('Warning: reached maximum numbers of iterations.')
-          break
+            print('Warning: reached maximum numbers of iterations.')
+            break
 
     print(f'Number of epochs: {it_num}')
     return weights, weight_history
+
+
+def perc_predict(X, weights):
+    # add bias
+    X = np.c_[X, np.ones(X.shape[0])]
+    # predict
+    y_pred = X @ weights
+    # threshold
+    y_pred[y_pred > 0] = 1
+    y_pred[y_pred <= 0] = -1
+    return y_pred
