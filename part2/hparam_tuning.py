@@ -71,14 +71,17 @@ class HparamTuning():
         history = model.fit(x=self.X_train, y=self.y_train,
                                       batch_size=BATCH_SIZE,
                                       epochs=EPOCHS, verbose=1,
-                                      callbacks=[es_callback,
-                                                 tensorboard_callback, hp_callback],
+                                      callbacks=[es_callback],
                                       validation_data=(self.X_val, self.y_val))
         
         _, mse = model.evaluate(self.X_test, self.y_test)
         return mse
 
-
+    def run(self, run_dir, hparams):
+        with tf.summary.create_file_writer(run_dir).as_default():
+            hp.hparams(hparams)  # record the values used in this trial
+            accuracy = self.train_test_model(run_dir, hparams)
+            tf.summary.scalar(METRIC_MSE, accuracy, step=1)
 
     def run_hparam_tuning(self):
 
@@ -99,6 +102,6 @@ class HparamTuning():
                             run_name = "run-%d" % session_num
                             print('--- Starting trial: %s' % run_name)
                             print({h.name: hparams[h] for h in hparams})
-                            self.train_test_model(
+                            self.run(
                                 'logs\\hparam_tuning\\' + run_name, hparams)
                             session_num += 1
