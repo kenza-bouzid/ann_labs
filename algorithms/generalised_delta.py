@@ -34,7 +34,7 @@ class TwoLP:
         return hout, out
 
     def weight_update(self, delta_o, delta_h, d_hidden, d_output, X, hout):
-        d_hidden = d_hidden * self.alpha - (delta_h @ X.T) * (1-self.alpha)
+        d_hidden = d_hidden * self.alpha - (delta_h @ X) * (1-self.alpha)
         d_output = d_output * self.alpha - (delta_o @ hout.T) * (1-self.alpha)
         self.hidden_weights += d_hidden * self.lr
         self.output_weights += d_output * self.lr
@@ -108,8 +108,7 @@ class TwoLP_seq:
         return hout, out
 
     def weight_update(self, delta_o, delta_h, d_hidden, d_output, X, hout):
-
-        d_hidden = d_hidden * self.alpha - (delta_h @ X) * (1-self.alpha)
+        d_hidden = d_hidden * self.alpha - (delta_h[:,None] * X) * (1-self.alpha)
         d_output = d_output * self.alpha - (delta_o * hout) * (1-self.alpha)
         self.hidden_weights += d_hidden * self.lr
         self.output_weights += d_output * self.lr
@@ -121,7 +120,7 @@ class TwoLP_seq:
             (out - y), self.derivative_activation_function(out))
         delta_h = np.multiply((self.output_weights.T @ delta_o),
                               self.derivative_activation_function(hout))
-        delta_h = delta_h#[:self.nodes_num]
+        delta_h = delta_h[:self.nodes_num]
         return delta_o, delta_h
     
     def predict(self, X):
