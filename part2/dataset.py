@@ -12,17 +12,15 @@ class MackeyGlass():
         self.x = None
         self.df = None
 
-    def generate_x(self):
-        
-        if self.x:
-            return self.x
-            
+    def generate_x(self, noise=False, sigma=0.05):    
         self.x = [self.x0]
         for t in range(1, self.end + 6):
             x25 = self.x[t-25] if t >= 25 else 0
             self.x.append(self.x[t-1] + 0.2*x25/(1+x25**10) - 0.1*self.x[t-1])
-        
-        return self.x
+        if noise:
+            noise = np.random.normal(0, sigma , self.end+6)
+            self.x = self.x + noise
+        return self.x 
 
     def create_pandas_df(self):
 
@@ -48,8 +46,8 @@ class MackeyGlass():
         self.df.to_csv("data/mackey_glass.csv")
         return self.df
 
-    def get_data(self):
-        x = self.generate_x()
+    def get_data(self, noise=False, sigma=0.05):
+        x = self.generate_x(noise, sigma)
         features = []
         labels = []
         

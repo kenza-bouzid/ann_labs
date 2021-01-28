@@ -1,7 +1,7 @@
 #%%
 import dataset as ds
 import mlp as mlp
-import hparam_tuning as ht
+import hparam_tuning_noise as hts
 import numpy as np
 import pandas as pd
 import importlib
@@ -16,21 +16,28 @@ print('Found GPU at: {}'.format(device_name))
 #%%
 importlib.reload(ds)
 mg = ds.MackeyGlass()
-df = mg.create_pandas_df()
 # %%
-df.head()
-#%%
-X, y = mg.get_data()
-X_train, X_val, X_test = X[:900], X[900:1000], X[1000:1200]
-y_train, y_val, y_test = y[:900], y[900:1000], y[1000:1200]
-
-# %%
-x = mg.generate_x()
-plt.plot(range(301, 1500),mg.x[301:1500])
+x = mg.generate_x(True, 0.05)
+plt.plot(range(301, 1500), mg.x[301:1500])
 plt.xlabel('Time')
 plt.ylabel('Time series')
-plt.title('Mackey Glass Time Series data for t in [301:1500]')
-plt.savefig("images/time_series.png")
+plt.title('Noisy Mackey Glass Time Series data for t in [301:1500], sigma=0.05')
+plt.savefig("images/time_series_noise_05.png")
+# %%
+x = mg.generate_x(True, 0.15)
+plt.plot(range(301, 1500), mg.x[301:1500])
+plt.xlabel('Time')
+plt.ylabel('Time series')
+plt.title(
+    'Noisy Mackey Glass Time Series data for t in [301:1500], sigma=0.15')
+plt.savefig("images/time_series_noise_15.png")
+#%%
+X_noisy, y_noisy = mg.get_data(True, 0.05)
+X, y = mg.get_data()
+
+X_train, X_val, X_test = X_noisy[:900], X[900:1000], X[1000:1200]
+y_train, y_val, y_test = y_noisy[:900], y[900:1000], y[1000:1200]
+
 #%%
 importlib.reload(mlp)
 mlp1 = mlp.MLP(X_train, y_train, X_val, y_val, X_test, y_test, nh1=4, nh2=2, lambda_=0.001)
@@ -38,7 +45,7 @@ model = mlp1.set_model()
 mlp1.compile(lr=0.05, momentum=0.9)
 #%%
 with tf.device('/device:GPU:0'):
-    history = mlp1.train(epochs=500)
+    history = mlp1.train(epochs=100)
 
 #%%
 hist = pd.DataFrame(history.history)
