@@ -18,7 +18,8 @@ EPOCHS = 100
 PATIENCE = 20
 LOG_DIR = 'logs\\hparam_tuning_relu\\'
 class HparamTuning():
-    def __init__(self, X_train, y_train, X_val, y_val, X_test, y_test):
+    def __init__(self, log_dir, X_train, y_train, X_val, y_val, X_test, y_test):
+        self.log_dir = log_dir
         self.X_train = X_train
         self.y_train = y_train
         self.X_val = X_val
@@ -29,7 +30,7 @@ class HparamTuning():
 
     def hyperparameter_setup(self):
         tf.summary.trace_on(graph=True, profiler=True)
-        with tf.summary.create_file_writer(LOG_DIR).as_default():
+        with tf.summary.create_file_writer(self.log_dir).as_default():
             hp.hparams_config(
                 hparams=[HP_NH1, HP_NH2, HP_LR, HP_ALPHA, HP_LAMBDA],
                 metrics=[hp.Metric(METRIC_MSE, display_name='mse')],
@@ -103,5 +104,5 @@ class HparamTuning():
                                 print('--- Starting trial: %s' % run_name)
                                 print({h.name: hparams[h] for h in hparams})
                                 self.run(
-                                    LOG_DIR + run_name, hparams)
+                                    self.log_dir + run_name, hparams)
                                 session_num += 1
