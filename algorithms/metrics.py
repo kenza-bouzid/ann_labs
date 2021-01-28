@@ -13,6 +13,7 @@ def precision(y, y_pred):
     precA = class_precision(y, y_pred, -1)
     precB = class_precision(y, y_pred, 1)
     print(f'Precision for A: {precA}, for B: {precB}')
+    return precA, precB
 
 
 def class_recall(y, y_pred, class_label=1):
@@ -26,3 +27,4 @@ def recall(y, y_pred):
     recA = class_recall(y, y_pred, -1)
     recB = class_recall(y, y_pred, 1)
     print(f'Recall for A: {recA}, for B: {recB}')
+    return recA, recB
