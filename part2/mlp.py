@@ -21,22 +21,23 @@ class MLP():
 
     def set_model(self):
         self.model = tf.keras.models.Sequential([
-            tfkl.Dense(self.n_input, activation='sigmoid', name="input_layer",
-                       kernel_regularizer=tf.keras.regularizers.l2(self.lambda_),
-                       kernel_initializer=tf.keras.initializers.GlorotNormal()),
-            tfkl.Dense(self.nh1, activation='sigmoid', name="hidden_layer1",
-                       kernel_regularizer=tf.keras.regularizers.l2(self.lambda_),
-                       kernel_initializer=tf.keras.initializers.GlorotNormal()),
-            tfkl.Dense(self.nh2, activation='sigmoid', name="hidden_layer2",
-                       kernel_regularizer=tf.keras.regularizers.l2(self.lambda_),
-                       kernel_initializer=tf.keras.initializers.GlorotNormal()),
+            tfkl.Dense(self.n_input, activation='elu', name="input_layer",
+                       kernel_regularizer=tfk.regularizers.l2(self.lambda_),
+                       kernel_initializer="he_normal"),
+            tfkl.Dense(self.nh1, activation='elu', name="hidden_layer1",
+                       kernel_regularizer=tfk.regularizers.l2(self.lambda_),
+                       kernel_initializer="he_normal"),
+            tfkl.Dense(self.nh2, activation='elu', name="hidden_layer2",
+                       kernel_regularizer=tfk.regularizers.l2(self.lambda_),
+                       kernel_initializer="he_normal"),
             tfkl.Dense(units=self.n_output, name="output_layer",
-                       kernel_initializer=tf.keras.initializers.GlorotNormal())
+                       kernel_regularizer=tfk.regularizers.l2(self.lambda_),
+                       kernel_initializer="glorot_normal")
         ])
         return self.model
 
     def compile(self, lr=1e-2, momentum=0.9):
-        optimizer = tfk.optimizers.SGD(lr=lr)#, momentum=momentum)
+        optimizer = tfk.optimizers.SGD(lr=lr, momentum=momentum)
         self.model.compile(loss="mse",
                            optimizer=optimizer, metrics=["mse"])
 

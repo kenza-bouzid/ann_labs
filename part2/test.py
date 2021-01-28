@@ -7,16 +7,16 @@ import pandas as pd
 import importlib
 import matplotlib.pyplot as plt
 import tensorflow as tf
-#%%
-importlib.reload(ds)
-mg = ds.MackeyGlass()
-df = mg.create_pandas_df()
 # %%
 ## Checking gpu setup
 device_name = tf.test.gpu_device_name()
 if device_name != '/device:GPU:0':
   print('GPU device not found')
 print('Found GPU at: {}'.format(device_name))
+#%%
+importlib.reload(ds)
+mg = ds.MackeyGlass()
+df = mg.create_pandas_df()
 # %%
 df.head()
 #%%
@@ -31,15 +31,12 @@ plt.xlabel('Time')
 plt.ylabel('Time series')
 #%%
 importlib.reload(mlp)
-mlp1 = mlp.MLP(X_train, y_train, X_val, y_val, X_test, y_test)
+mlp1 = mlp.MLP(X_train, y_train, X_val, y_val, X_test, y_test, nh1=4, nh2=2, lambda_=0.001)
 model = mlp1.set_model()
-mlp1.compile()
-
-#%%
-
+mlp1.compile(lr=0.05, momentum=0.9)
 #%%
 with tf.device('/device:GPU:0'):
-    history = mlp1.train(epochs=10)
+    history = mlp1.train(epochs=500)
 
 #%%
 hist = pd.DataFrame(history.history)
