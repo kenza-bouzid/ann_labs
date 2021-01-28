@@ -33,17 +33,12 @@ plt.title('Mackey Glass Time Series data for t in [301:1500]')
 plt.savefig("images/time_series.png")
 #%%
 importlib.reload(mlp)
-mlp1 = mlp.MLP(X_train, y_train, X_val, y_val, X_test, y_test, nh1=4, nh2=2, lambda_=0.001)
+mlp1 = mlp.MLP(X_train, y_train, X_val, y_val, X_test, y_test, nh1=4, nh2=4, lambda_=0.001)
 model = mlp1.set_model()
 mlp1.compile(lr=0.05, momentum=0.9)
 #%%
 with tf.device('/device:GPU:0'):
     history = mlp1.train(epochs=500)
-
-#%%
-hist = pd.DataFrame(history.history)
-hist['epoch'] = history.epoch
-hist.tail()
 #%%
 mlp1.plot_loss()
 #%%
@@ -56,7 +51,9 @@ plt.plot(range(200), y_test, label="Known Targets")
 plt.plot(range(200), y_pred, label="Predicted Targets")
 plt.xlabel('Time')
 plt.ylabel('Time series')
+plt.title('Test predictions along with the known target values.')
 plt.legend()
+plt.savefig("images/res_4_4.png")
 #%%
 # HYPERPARAM TUNING
 importlib.reload(ht)

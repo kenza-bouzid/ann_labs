@@ -87,7 +87,7 @@ class HparamTuning():
     def run_hparam_tuning(self):
         with tf.device('/device:GPU:0'):
             self.hyperparameter_setup()
-            session_num = 72
+            session_num = 0
             for nh1 in HP_NH1.domain.values:
                 for nh2 in HP_NH2.domain.values:
                     for lambda_ in HP_LAMBDA.domain.values:
@@ -103,6 +103,9 @@ class HparamTuning():
                                 run_name = "run-%d" % session_num
                                 print('--- Starting trial: %s' % run_name)
                                 print({h.name: hparams[h] for h in hparams})
-                                self.run(
-                                    self.log_dir + run_name, hparams)
+                                try:
+                                    self.run(
+                                        self.log_dir + run_name, hparams)
+                                except:
+                                    continue
                                 session_num += 1

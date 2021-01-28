@@ -3,18 +3,20 @@ import tensorflow as tf
 tfk = tf.keras
 tfkl = tfk.layers
 
-HP_NH2 = hp.HParam('nh2', hp.Discrete([2, 4, 6]))
-HP_LAMBDA = hp.HParam('lambda', hp.Discrete([0.001, 0.005, 0.01, 0.05, 0.1]))
-
 NH1 = 4
-ALPHA = 0.8
+ALPHA = 0.9
 LR = 0.05
+HP_NH2 = hp.HParam('nh2', hp.Discrete([2, 4, 6]))
+HP_LAMBDA = hp.HParam('lambda', hp.Discrete(
+    [0.0001, 0.001, 0.005, 0.01, 0.05, 0.1]))
+
+
 METRIC_MSE = 'mse'
 N_INPUT = 5
 N_OUTPUT = 1
 BATCH_SIZE = 50
-EPOCHS = 500
-LOG_DIR = 'logs\\hparam_tuning_noisy\\'
+EPOCHS = 250
+LOG_DIR = 'logs\\hparam_tuning_noisy_05\\'
 class HparamTuning():
     def __init__(self, log_dir, X_train, y_train, X_val, y_val, X_test, y_test):
         self.log_dir = log_dir
@@ -87,6 +89,9 @@ class HparamTuning():
                     run_name = "run-%d" % session_num
                     print('--- Starting trial: %s' % run_name)
                     print({h.name: hparams[h] for h in hparams})
-                    self.run(
-                        self.log_dir + run_name, hparams)
+                    try:
+                        self.run(
+                            self.log_dir + run_name, hparams)
+                    except:
+                        continue
                     session_num += 1

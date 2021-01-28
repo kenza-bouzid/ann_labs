@@ -32,7 +32,7 @@ plt.title(
     'Noisy Mackey Glass Time Series data for t in [301:1500], sigma=0.15')
 plt.savefig("images/time_series_noise_15.png")
 #%%
-X_noisy, y_noisy = mg.get_data(True, 0.05)
+X_noisy, y_noisy = mg.get_data(True, 0.15)
 X, y = mg.get_data()
 
 X_train, X_val, X_test = X_noisy[:900], X[900:1000], X[1000:1200]
@@ -40,12 +40,12 @@ y_train, y_val, y_test = y_noisy[:900], y[900:1000], y[1000:1200]
 
 #%%
 importlib.reload(mlp)
-mlp1 = mlp.MLP(X_train, y_train, X_val, y_val, X_test, y_test, nh1=4, nh2=2, lambda_=0.001)
+mlp1 = mlp.MLP(X_train, y_train, X_val, y_val, X_test, y_test, nh1=4, nh2=2, lambda_=0.0001)
 model = mlp1.set_model()
 mlp1.compile(lr=0.05, momentum=0.9)
 #%%
 with tf.device('/device:GPU:0'):
-    history = mlp1.train(epochs=100)
+    history = mlp1.train(epochs=500)
 
 #%%
 hist = pd.DataFrame(history.history)
@@ -63,11 +63,13 @@ plt.plot(range(200), y_test, label="Known Targets")
 plt.plot(range(200), y_pred, label="Predicted Targets")
 plt.xlabel('Time')
 plt.ylabel('Time series')
+plt.title("Test predictions along with the known target values with noisy train data.")
 plt.legend()
+plt.savefig("images/noisy15.png")
 #%%
 # HYPERPARAM TUNING
-importlib.reload(ht)
-tuning = ht.HparamTuning('logs\\hparam_tuning_elu\\',
+importlib.reload(hts)
+tuning = hts.HparamTuning('logs\\hparam_tuning_noisy_15\\',
                          X_train, y_train, X_val, y_val, X_test, y_test)
 #%%
 with tf.device('/device:GPU:0'):

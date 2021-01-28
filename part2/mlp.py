@@ -22,17 +22,17 @@ class MLP():
     def set_model(self):
         self.model = tf.keras.models.Sequential([
             tfkl.Dense(self.n_input, activation='elu', name="input_layer",
-                       kernel_regularizer=tfk.regularizers.l2(self.lambda_),
-                       kernel_initializer="he_normal"),
+                       kernel_regularizer=tfk.regularizers.l2(self.lambda_)),
+                    #    kernel_initializer="he_normal"),
             tfkl.Dense(self.nh1, activation='elu', name="hidden_layer1",
-                       kernel_regularizer=tfk.regularizers.l2(self.lambda_),
-                       kernel_initializer="he_normal"),
+                       kernel_regularizer=tfk.regularizers.l2(self.lambda_)),
+                    #    kernel_initializer="he_normal"),
             tfkl.Dense(self.nh2, activation='elu', name="hidden_layer2",
-                       kernel_regularizer=tfk.regularizers.l2(self.lambda_),
-                       kernel_initializer="he_normal"),
+                       kernel_regularizer=tfk.regularizers.l2(self.lambda_)),
+                    #    kernel_initializer="he_normal"),
             tfkl.Dense(units=self.n_output, name="output_layer",
-                       kernel_regularizer=tfk.regularizers.l2(self.lambda_),
-                       kernel_initializer="glorot_normal")
+                       kernel_regularizer=tfk.regularizers.l2(self.lambda_))
+                    #    kernel_initializer="glorot_normal")
         ])
         return self.model
 
@@ -56,7 +56,7 @@ class MLP():
         self.history = self.model.fit(x=self.X_train, y=self.y_train, 
                                       batch_size=batch_size, 
                                       epochs=epochs, verbose=1,
-                                      callbacks=[es_callback, tensorboard_callback], 
+                                      callbacks=[tensorboard_callback], 
                                       validation_data=(self.X_val, self.y_val))
         return self.history
 
@@ -64,6 +64,8 @@ class MLP():
         plt.plot(self.history.history['loss'], label='loss')
         plt.plot(self.history.history['val_loss'], label='val_loss')
         plt.xlabel('Epoch')
-        plt.ylabel('Error [MPG]')
+        plt.ylabel('Loss')
+        plt.title('Validation and Training loss history')
         plt.legend()
         plt.grid(True)
+        plt.savefig(f"images/hist_{self.nh1}_{self.nh2}_{self.lambda_}.png")
