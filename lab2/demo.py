@@ -2,7 +2,7 @@ from dataset import SinusData
 from dataset import SquareData
 import matplotlib.pyplot as plt
 
-sin_data = SinusData(noise=True)
+sin_data = SinusData(noise=False)
 plt.scatter(sin_data.x, sin_data.y)
 plt.show()
 
