@@ -19,6 +19,7 @@ class MackeyGlass():
             self.x.append(self.x[t-1] + 0.2*x25/(1+x25**10) - 0.1*self.x[t-1])
         if noise:
             noise = np.random.normal(0, sigma , self.end+6)
+            
             self.x = self.x + noise
         return self.x 
 

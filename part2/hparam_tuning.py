@@ -3,7 +3,7 @@ import tensorflow as tf
 tfk = tf.keras
 tfkl = tfk.layers
 
-HP_NH1 = hp.HParam('nh1', hp.Discrete([4, 5]))
+HP_NH1 = hp.HParam('nh1', hp.Discrete([3,4, 5]))
 HP_NH2 = hp.HParam('nh2', hp.Discrete([2, 4, 6]))
 HP_LAMBDA = hp.HParam('lambda', hp.Discrete([0.001, 0.01, 0.1]))
 HP_LR = hp.HParam('lr', hp.Discrete(

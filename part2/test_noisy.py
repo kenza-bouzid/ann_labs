@@ -32,7 +32,7 @@ plt.title(
     'Noisy Mackey Glass Time Series data for t in [301:1500], sigma=0.15')
 plt.savefig("images/time_series_noise_15.png")
 #%%
-X_noisy, y_noisy = mg.get_data(True, 0.15)
+X_noisy, y_noisy = mg.get_data(True, 0.05)
 X, y = mg.get_data()
 
 X_train, X_val, X_test = X_noisy[:900], X[900:1000], X[1000:1200]
@@ -65,7 +65,7 @@ plt.xlabel('Time')
 plt.ylabel('Time series')
 plt.title("Test predictions along with the known target values with noisy train data.")
 plt.legend()
-plt.savefig("images/noisy15.png")
+plt.savefig("images/noisy005.png")
 #%%
 # HYPERPARAM TUNING
 importlib.reload(hts)
