@@ -2,11 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-
-
-
-
+.vscode/
+part2/logs/
+part2/images/
 
 
 
