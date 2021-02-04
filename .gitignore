@@ -2,7 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-part1/data/__pycache__/*
-part1/algorithms/__pycache__/*
+lab1/part1/data/__pycache__/*
+lab1/part1/algorithms/__pycache__/*
+lab1/part1/.ipynb_checkpoints/*
 .ipynb_checkpoints/*
 .vscode/*
+
+
