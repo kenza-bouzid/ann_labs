@@ -42,6 +42,28 @@ class RBF():
         error = np.mean(abs(f_hat-f_test))
         return f_hat, error
 
+    def competitive_learning(self, X, eta=0.1, neigh=3, max_iter=60, seed=42):
+        np.random.seed(42)
+        for i in range(max_iter):
+            x = X[np.random.randint(X.shape[0])]
+            try:
+                distances = [[i_c, np.linalg.norm(x, self.centers[i_c])] for i_c in range(len(self.centers))]
+            except:
+                distances = [[i_c, np.linalg.norm(np.array([x]), np.array([self.centers[i_c]]))] for i_c in range(len(self.centers))]
+
+            distances.sort(key=lambda x: x[1])
+            for i in range(neigh):
+                coef = eta / (distances[i][1] + 1e-3)
+                if coef >= 0.9:
+                    coef = 0.9
+                self.centers[distances[i][0]] += coef * (x - self.centers[distances[i][0]])
+
+    def hybrid_learning(self, X, f, X_test, f_test, lr=0.01, max_iters=250, seed=42, eta=0.1, neigh=3):
+        self.competitive_learning(X, eta, neigh)
+        f_hat, error = self.delta_learning(X, f, X_test, f_test, lr, max_iters, seed)
+        return f_hat, error
+
+
     def set_centers(self, n, drop, weight):
         x_line = np.linspace(0, 2, 9)*np.pi
 
