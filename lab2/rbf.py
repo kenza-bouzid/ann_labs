@@ -18,8 +18,6 @@ class RBF():
     def batch_learning(self, x, f, x_test, f_test):
         # compute phi 
         phi = self.compute_phi(x)
-        phi_2 = phi @ phi.T
-        y = phi.T @ f
         # find the weights that minimize the total error = |phi W - f|^2
         w = np.linalg.solve(phi.T @ phi, phi.T @ f)
         # Evaluate the error 
