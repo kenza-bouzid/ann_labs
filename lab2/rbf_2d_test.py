@@ -1,12 +1,10 @@
 from rbf import RBF
-from dataset import SinusData
-from dataset import SquareData
 import matplotlib.pyplot as plt
 import numpy as np
 
 def experiment(data, n_nodes, error, n, weight=1.0):
     rbf_net = RBF(n=n, weight=weight)
-    _, err = rbf_net.batch_learning(
+    _, err = rbf_net.hybrid_learning(
         data.x, data.y, data.x_test, data.y_test)
     n_nodes.append(rbf_net.n_nodes)
     error.append(err)
@@ -16,7 +14,7 @@ def experiment2(data, n_nodes, error, n):
     rbf_net.centers = np.linspace(0, 2*np.pi, n)
     rbf_net.n_nodes = n
     rbf_net.set_sigmas(0.5)
-    _, err = rbf_net.batch_learning(
+    _, err = rbf_net.hybrid_learning(
         data.x, data.y, data.x_test, data.y_test)
     n_nodes.append(rbf_net.n_nodes)
     error.append(err)
@@ -40,33 +38,34 @@ def plot_error(n_nodes, error, data):
     plt.show()
 
 
-def plot_estimate(data, type, n=3):
-    rbf_net = RBF(n=n)
-    y_hat, error = rbf_net.batch_learning(
-        data.x, data.y, data.x_test, data.y_test)
+def plot_estimate(x, y, x_test, y_test, n_nodes=20):
+    rbf_net = RBF()
+    rbf_net.set_centers_from_data(x, n_nodes)
+    y_hat, error = rbf_net.hybrid_learning(
+        x, y, x_test, y_test)
     centers, n_nodes = rbf_net.centers, rbf_net.n_nodes
-    plt.plot(data.x_test, data.y_test, label="Target")
-    plt.plot(data.x_test, y_hat, label="Estimate")
-    plt.scatter(centers, [0]*n_nodes, c="r", label="RBF Centers")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.title(f'Target vs Estimated values with {n_nodes} hidden nodes, error= {round(error,5)}')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(f"images/3.1/{type}/{type}_{n_nodes}.png")
-    plt.show()
+    # plt.plot(data.x_test, data.y_test, label="Target")
+    # plt.plot(data.x_test, y_hat, label="Estimate")
+    # plt.scatter(centers, [0]*n_nodes, c="r", label="RBF Centers")
+    # plt.xlabel("x")
+    # plt.ylabel("y")
+    # plt.title(f'Target vs Estimated values with {n_nodes} hidden nodes, error= {round(error,5)}')
+    # plt.legend()
+    # plt.grid(True)
+    # plt.savefig(f"images/3.1/{type}/{type}_{n_nodes}.png")
+    # plt.show()
+    print(error)
 
 
-sin_data = SinusData(noise=False)
-error, n_nodes = experiment_nodes(sin_data)
-plot_error(n_nodes, error, "sinus")
-# plot_estimate(sin_data, type="sinus", n=3)
+data = np.loadtxt('data_lab2/ballist.dat')
+test = np.loadtxt('data_lab2/balltest.dat')
 
+x = data[:, :2]
+y = data[:, 2:]
+x_test = test[:, :2]
+y_test = test[:, 2:]
 
-sqr_data = SquareData(noise=True)
-error, n_nodes = experiment_nodes(sqr_data)
-plot_error(n_nodes, error, "square")
+plot_estimate(x, y, x_test, y_test, n_nodes=20)
 
-# plot_estimate(sqr_data, type="square", n=2)
 
 
