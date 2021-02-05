@@ -2,9 +2,20 @@ from rbf import RBF
 from dataset import SinusData
 from dataset import SquareData
 import matplotlib.pyplot as plt
+import numpy as np
 
 def experiment(data, n_nodes, error, n, weight=1.0):
     rbf_net = RBF(n=n, weight=weight)
+    _, err = rbf_net.batch_learning(
+        data.x, data.y, data.x_test, data.y_test)
+    n_nodes.append(rbf_net.n_nodes)
+    error.append(err)
+
+def experiment2(data, n_nodes, error, n):
+    rbf_net = RBF(n=n)
+    rbf_net.centers = np.linspace(0, 2*np.pi, n)
+    rbf_net.n_nodes = n
+    rbf_net.set_sigmas(0.5)
     _, err = rbf_net.batch_learning(
         data.x, data.y, data.x_test, data.y_test)
     n_nodes.append(rbf_net.n_nodes)
@@ -15,6 +26,8 @@ def experiment_nodes(data):
     n_nodes = []
     for i in range(7):
         experiment(data, n_nodes, error, n=i, weight=1.0)
+        # experiment2(data, n_nodes, error, n=i)
+
     return error, n_nodes
 
 def plot_error(n_nodes, error, data):
@@ -45,14 +58,14 @@ def plot_estimate(data, type, n=3):
 
 
 sin_data = SinusData(noise=False)
-# error, n_nodes = experiment_nodes(sin_data)
-# plot_error(n_nodes, error, "sinus")
-plot_estimate(sin_data, type="sinus", n=3)
+error, n_nodes = experiment_nodes(sin_data)
+plot_error(n_nodes, error, "sinus")
+# plot_estimate(sin_data, type="sinus", n=3)
 
 
-# sqr_data = SquareData(noise=True)
-# error, n_nodes = experiment_nodes(sqr_data)
-# plot_error(n_nodes, error, "square")
+sqr_data = SquareData(noise=True)
+error, n_nodes = experiment_nodes(sqr_data)
+plot_error(n_nodes, error, "square")
 
 # plot_estimate(sqr_data, type="square", n=2)
 
