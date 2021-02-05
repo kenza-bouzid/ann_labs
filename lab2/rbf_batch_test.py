@@ -58,9 +58,9 @@ def plot_estimate(data, type, n=3):
 
 
 sin_data = SinusData(noise=False)
-error, n_nodes = experiment_nodes(sin_data)
-plot_error(n_nodes, error, "sinus")
-# plot_estimate(sin_data, type="sinus", n=3)
+# error, n_nodes = experiment_nodes(sin_data)
+# plot_error(n_nodes, error, "sinus")
+plot_estimate(sin_data, type="sinus", n=3)
 
 
 sqr_data = SquareData(noise=True)
