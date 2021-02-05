@@ -2,7 +2,9 @@ import numpy as np
 from scipy.spatial import distance_matrix
 
 class SOM:
+
     def __init__(self,num_features, data, num_nodes, seed, grid = (0,0)):
+        '''grid is the format of the grid we want to train, if (0,0) we assume a chain'''
         self.num_nodes = num_nodes
         self.nodes = self.generate_nodes(num_nodes,num_features,seed)
         self.distMat = distance_matrix(data,self.nodes)
@@ -15,8 +17,10 @@ class SOM:
         return np.random.rand(self.num_nodes,num_features)
 
     def create_mapping(self,grid):
+        '''reuturns list of 2d coordinates and the mapping plus its inverse'''
         x = range(grid[0])
         y = range(grid[1])
+        #this builds the cartesian product
         c_product = np.transpose([np.repeat(y, len(x)),np.tile(x, len(y))])
         mapping = {i:np.array(c) for i,c in enumerate(c_product)}
         reverse = {tuple(c):i for i,c in enumerate(c_product)}
@@ -27,6 +31,7 @@ class SOM:
         return argmin
     
     def get_update_wheight(self, w_id, neighbour_id):
+        '''returns the extra wheights for the neighouring nodes'''
         if w_id == neighbour_id:
             return 1
         w = self.nodes[w_id]
@@ -39,9 +44,11 @@ class SOM:
 
 
     def update_dist(self,data):
+        '''update distance matrix'''
         self.distMat = distance_matrix(data,self.nodes)
     
     def update(self,idx, x, eta):
+        '''update wheights at index idx given the datapoint x and learning rate eta'''
         w = self.nodes[idx]
         delta_w = x-w
         w = w + eta*delta_w
@@ -62,12 +69,16 @@ class SOM:
                 self.update_dist(data)
 
     def get_grid_range(self,idn, num_neighbours):
+        '''returns all indices which are going to be updated according to num_neighbours in a 2dim grid
+        the n neigbour grid is computed by the shortest distance of the position of tuples in the grid
+        (this seemed to be the easiest way)'''
         idx = self.mapping[idn]
         temp = sorted(self.tupels, key=lambda x: np.linalg.norm(x-idx,ord=2))[:num_neighbours]
         neigbours = [self.reverse_mapping[tuple(n)] for n in temp]
         return neigbours
 
     def get_range(self, circular, idx,num_neighbours):
+        '''returns all indices which are going to be updated according to num_neighbours'''
         low = idx-round(num_neighbours/2)
         up = idx+round(num_neighbours/2)
         if circular:
@@ -81,5 +92,6 @@ class SOM:
 
 
     def anneal_num_neighbour(self,num_neighbours_start, num_neighbours_end,epochs,c_epoch):
+        '''returns the linear decreased num_neighbours value for the current epoch c_epoch'''
         delta = (num_neighbours_start- num_neighbours_end)/epochs * (c_epoch+1)
         return num_neighbours_start-round(delta)
