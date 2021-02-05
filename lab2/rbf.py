@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from numpy.core.numeric import indices
 from scipy.sparse.construct import rand
 from sklearn.utils import shuffle
+import tqdm as tqdm
 import random
 
 
@@ -37,7 +38,7 @@ class RBF():
         weights = np.random.default_rng(seed).normal(
             0, 0.5, (self.n_nodes, X.shape[1]))
 
-        for _ in range(max_iters):
+        for _ in tqdm(range(max_iters)):
             X, f = shuffle(X, f, random_state=seed)
             for idx, x in enumerate(X):
                 try:
@@ -56,7 +57,7 @@ class RBF():
 
     def competitive_learning(self, X, eta=0.1, neigh=3, max_iter=60, seed=42):
         np.random.seed(seed)
-        for i in range(max_iter):
+        for i in tqdm(range(max_iter)):
             x = X[np.random.randint(X.shape[0])]
             try:
                 distances = [[i_c, np.linalg.norm(

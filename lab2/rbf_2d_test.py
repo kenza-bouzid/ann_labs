@@ -2,29 +2,19 @@ from rbf import RBF
 import matplotlib.pyplot as plt
 import numpy as np
 
-def experiment(data, n_nodes, error, n, weight=1.0):
-    rbf_net = RBF(n=n, weight=weight)
+def experiment(x, y, x_test, y_test, n_nodes, error, n):
+    rbf_net = RBF()
+    rbf_net.set_centers_from_data(x, n)
     _, err = rbf_net.hybrid_learning(
-        data.x, data.y, data.x_test, data.y_test)
+        x, y, x_test, y_test)
     n_nodes.append(rbf_net.n_nodes)
     error.append(err)
 
-def experiment2(data, n_nodes, error, n):
-    rbf_net = RBF(n=n)
-    rbf_net.centers = np.linspace(0, 2*np.pi, n)
-    rbf_net.n_nodes = n
-    rbf_net.set_sigmas(0.5)
-    _, err = rbf_net.hybrid_learning(
-        data.x, data.y, data.x_test, data.y_test)
-    n_nodes.append(rbf_net.n_nodes)
-    error.append(err)
-
-def experiment_nodes(data):
+def experiment_nodes(x, y, x_test, y_test):
     error = []
     n_nodes = []
-    for i in range(7):
-        experiment(data, n_nodes, error, n=i, weight=1.0)
-        # experiment2(data, n_nodes, error, n=i)
+    for i in range(10, 60):
+        experiment(x, y, x_test, y_test, n_nodes, error, n=i)
 
     return error, n_nodes
 
@@ -64,6 +54,9 @@ x = data[:, :2]
 y = data[:, 2:]
 x_test = test[:, :2]
 y_test = test[:, 2:]
+
+error, n_nodes = experiment_nodes(x, y, x_test, y_test)
+plot_error(n_nodes, error, "2d")
 
 plot_estimate(x, y, x_test, y_test, n_nodes=20)
 
