@@ -20,7 +20,7 @@ def experiment(data, learning_mode, centers_sampling, n_nodes=None, error=None, 
         y_hat, err = rbf_net.hybrid_learning(
             data.x, data.y, data.x_test, data.y_test)
 
-    if n_nodes and error:
+    if n_nodes!=None and error!=None:
         n_nodes.append(rbf_net.n_nodes)
         error.append(err)
 
@@ -99,7 +99,6 @@ def error_experiment(data, type, learning_mode, centers_sampling):
 
     error, n_nodes = experiment_nodes(data, learning_mode=learning_mode,
                                       centers_sampling=centers_sampling, sigma=1.0)
-
     plot_error(n_nodes, error, type, learning_mode=learning_mode,
                centers_sampling=centers_sampling)
     print(f"Optimal n_nodes RBF for {type}!")
