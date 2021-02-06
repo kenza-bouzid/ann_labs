@@ -31,6 +31,7 @@ class RBF():
             self.set_centers_from_data(x, n_nodes, seed)
 
         self.sigmas = np.full(self.n_nodes, sigma)
+        self.training_errors = []
     
     def compute_phi(self, x):
         n, N = self.centers.shape[0], x.shape[0]
@@ -56,6 +57,7 @@ class RBF():
     def delta_learning(self, X, f, X_test, f_test, lr=0.01, max_iters=15, seed=42):
         weights = np.random.default_rng(seed).normal(
             0, 0.5, (self.n_nodes, X.shape[1]))
+        self.training_errors = []
 
         for _ in tqdm(range(max_iters)):
             X, f = shuffle(X, f, random_state=seed)
@@ -65,9 +67,11 @@ class RBF():
                 except:
                     phi = self.compute_phi(np.array([x]))
                 f_arr = np.array(f[idx])
-                test = f_arr - phi @ weights
                 weight_update = lr*(f_arr - phi @ weights).T @ phi
                 weights += weight_update.T
+
+            f_hat_train = phi @ weights
+            self.training_errors.append(np.sum((f_hat_train-f_arr)**2))
 
         phi_test = self.compute_phi(X_test)
         f_hat = phi_test @ weights
