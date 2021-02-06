@@ -54,19 +54,6 @@ class RBF():
         f_hat = phi_test @ w
         error = np.mean(abs(f_hat-f_test))
         return f_hat, error
-    
-    def batch_learning_act(self, x, f, x_test, f_test):
-        # compute phi
-        phi = self.compute_phi(x)
-        phi = np.c_[np.ones(phi.shape[0]), phi]
-        # find the weights that minimize the total error = |phi W - f|^2
-        w = np.linalg.solve(phi.T @ phi, phi.T @ f)
-        # Evaluate the error
-        phi_test = self.compute_phi(x_test)
-        phi_test = np.c_[np.ones(phi_test.shape[0]), phi_test]
-        f_hat = phi_test @ w
-        error = np.mean(abs(f_hat-f_test))
-        return f_hat, error
 
     def delta_learning(self, X, f, X_test, f_test, lr=0.01, max_iters=15, seed=42):
         weights = np.random.default_rng(seed).normal(
