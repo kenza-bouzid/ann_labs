@@ -12,8 +12,8 @@ class CentersSampling(Enum):
 
 class LearningMode(Enum):
     BATCH = 0
-    DELTA = 0
-    HYBRID = 0
+    DELTA = 1
+    HYBRID = 2
 
 class RBF():
     def __init__(self, centers_sampling, n_nodes=20, n_inter=1, drop=2**9-1, weight=1.0, x=None, seed=42, sigma=0.5):

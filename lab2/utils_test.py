@@ -97,7 +97,7 @@ def plot_estimate(data, type, learning_mode, centers_sampling, n=20, n_iter=3, w
 
 
 def error_experiment(data, type, learning_mode, centers_sampling, weight=1.0, drop=2**9-1, sigma=1.0):
-
+    print("HERE", learning_mode.name)
     error, n_nodes = experiment_nodes(data, learning_mode=learning_mode,
                                       centers_sampling=centers_sampling, weight=weight, drop=drop, sigma=sigma)
     plot_error(n_nodes, error, type, learning_mode=learning_mode,
