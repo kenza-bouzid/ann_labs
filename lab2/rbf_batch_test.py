@@ -1,72 +1,23 @@
-from rbf import RBF
+from rbf import LearningMode
+from rbf import CentersSampling
 from dataset import SinusData
 from dataset import SquareData
-import matplotlib.pyplot as plt
-import numpy as np
-
-def experiment(data, n_nodes, error, n, weight=1.0):
-    rbf_net = RBF(n=n, weight=weight)
-    _, err = rbf_net.batch_learning(
-        data.x, data.y, data.x_test, data.y_test)
-    n_nodes.append(rbf_net.n_nodes)
-    error.append(err)
-
-def experiment2(data, n_nodes, error, n):
-    rbf_net = RBF(n=n)
-    rbf_net.centers = np.linspace(0, 2*np.pi, n)
-    rbf_net.n_nodes = n
-    rbf_net.set_sigmas(0.5)
-    _, err = rbf_net.batch_learning(
-        data.x, data.y, data.x_test, data.y_test)
-    n_nodes.append(rbf_net.n_nodes)
-    error.append(err)
-
-def experiment_nodes(data):
-    error = []
-    n_nodes = []
-    for i in range(7):
-        experiment(data, n_nodes, error, n=i, weight=1.0)
-        # experiment2(data, n_nodes, error, n=i)
-
-    return error, n_nodes
-
-def plot_error(n_nodes, error, data):
-    plt.scatter(n_nodes, error)
-    plt.xlabel("number of hidden nodes")
-    plt.ylabel("absolute residual error")
-    plt.title("Absolute Residual Error vs number of hidden nodes")
-    plt.legend()
-    plt.savefig(f"images/3.1/{data}_error_{len(n_nodes)}.png")
-    plt.show()
+from utils_test import *
 
 
-def plot_estimate(data, type, n=3):
-    rbf_net = RBF(n=n)
-    y_hat, error = rbf_net.batch_learning(
-        data.x, data.y, data.x_test, data.y_test)
-    centers, n_nodes = rbf_net.centers, rbf_net.n_nodes
-    plt.plot(data.x_test, data.y_test, label="Target")
-    plt.plot(data.x_test, y_hat, label="Estimate")
-    plt.scatter(centers, [0]*n_nodes, c="r", label="RBF Centers")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.title(f'Target vs Estimated values with {n_nodes} hidden nodes, error= {round(error,5)}')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(f"images/3.1/{type}/{type}_{n_nodes}.png")
-    plt.show()
-
-
+## SINUS EXPERIMENTS ##
 sin_data = SinusData(noise=False)
-# error, n_nodes = experiment_nodes(sin_data)
-# plot_error(n_nodes, error, "sinus")
-plot_estimate(sin_data, type="sinus", n=3)
+error_experiment(sin_data, "sinus", LearningMode.BATCH, CentersSampling.LINEAR)
+# plot_estimate(sin_data, type="sinus", learning_mode=LearningMode.BATCH,
+#               centers_sampling=CentersSampling.LINEAR, n=20, sigma=1.0)
+# plot_estimate(sin_data, type="sinus", learning_mode=LearningMode.BATCH,
+            #   centers_sampling=CentersSampling.WEIGHTED,n_iter=3, weight=1.0, drop=2**9-1, sigma=1.0)
 
-
-sqr_data = SquareData(noise=True)
-error, n_nodes = experiment_nodes(sqr_data)
-plot_error(n_nodes, error, "square")
-
-# plot_estimate(sqr_data, type="square", n=2)
-
-
+## SQUARE EXPERIMENTS ##
+# sqr_data = SquareData(noise=False)
+# error_experiment(sqr_data, "square", LearningMode.BATCH,
+#                  CentersSampling.WEIGHTED)
+# plot_estimate(sqr_data, type="square", learning_mode=LearningMode.BATCH,
+#               centers_sampling=CentersSampling.LINEAR, n=20, sigma=1.0)
+# plot_estimate(sqr_data, type="square", learning_mode=LearningMode.BATCH,
+            #   centers_sampling=CentersSampling.WEIGHTED, n_iter=3, weight=1.0, drop=2**9-1, sigma=1.0)
