@@ -86,9 +86,7 @@ class RBF():
 
             distances.sort(key=lambda x: x[1])
             for i in range(neigh):
-                coef = eta / (distances[i][1] + 1e-3)
-                if coef >= 0.9:
-                    coef = 0.9
+                coef = eta / (distances[i][1] + 1)
                 self.centers[distances[i][0]] += coef * \
                     (x - self.centers[distances[i][0]])
 
