@@ -1,7 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from numpy.core.numeric import indices
-from scipy.sparse.construct import rand
 from sklearn.utils import shuffle
 from tqdm import tqdm
 import random
@@ -15,8 +12,8 @@ class CentersSampling(Enum):
 
 class LearningMode(Enum):
     BATCH = 0
-    DELTA = 0
-    HYBRID = 0
+    DELTA = 1
+    HYBRID = 2
 
 class RBF():
     def __init__(self, centers_sampling, n_nodes=20, n_inter=1, drop=2**9-1, weight=1.0, x=None, seed=42, sigma=0.5):
@@ -46,10 +43,12 @@ class RBF():
     def batch_learning(self, x, f, x_test, f_test):
         # compute phi
         phi = self.compute_phi(x)
+        phi = np.c_[np.ones(phi.shape[0]), phi]
         # find the weights that minimize the total error = |phi W - f|^2
         w = np.linalg.solve(phi.T @ phi, phi.T @ f)
         # Evaluate the error
         phi_test = self.compute_phi(x_test)
+        phi_test = np.c_[np.ones(phi_test.shape[0]), phi_test]
         f_hat = phi_test @ w
         error = np.mean(abs(f_hat-f_test))
         return f_hat, error
@@ -91,9 +90,7 @@ class RBF():
 
             distances.sort(key=lambda x: x[1])
             for i in range(neigh):
-                coef = eta / (distances[i][1] + 1e-3)
-                if coef >= 0.9:
-                    coef = 0.9
+                coef = eta / (distances[i][1] + 1)
                 self.centers[distances[i][0]] += coef * \
                     (x - self.centers[distances[i][0]])
 
