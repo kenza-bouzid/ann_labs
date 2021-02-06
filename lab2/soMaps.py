@@ -10,7 +10,7 @@ class SOM:
         self.distMat = distance_matrix(data,self.nodes)
         #create 2dim mapping
         self.grid = grid
-        self.tupels, self.mapping, self.reverse_mapping = self.create_mapping(self.grid)
+        self.grid_dist, self.mapping, self.reverse_mapping = self.create_mapping(self.grid)
 
     def generate_nodes(self,num_nodes,num_features,seed):
         np.random.seed(seed)
@@ -22,9 +22,10 @@ class SOM:
         y = range(grid[1])
         #this builds the cartesian product
         c_product = np.transpose([np.repeat(y, len(x)),np.tile(x, len(y))])
+        grid_dist = distance_matrix(c_product,c_product)
         mapping = {i:np.array(c) for i,c in enumerate(c_product)}
         reverse = {tuple(c):i for i,c in enumerate(c_product)}
-        return c_product, mapping, reverse
+        return grid_dist, mapping, reverse
 
     def get_closest_node(self,idx):
         argmin = np.argmin(self.distMat[idx])
@@ -36,11 +37,13 @@ class SOM:
             return 1
         w = self.nodes[w_id]
         w_neighbour = self.nodes[neighbour_id]
-        wheight = 1/np.linalg.norm(w-w_neighbour,ord=2)
-        if 0 <= wheight <= 0.9:
-            return wheight
-        else:
-            return 0.9
+        dist = np.linalg.norm(w-w_neighbour,ord=2)
+        return self.wheight_function(1/dist)
+        # wheight = 1/np.linalg.norm(w-w_neighbour,ord=2)
+        # if 0 <= wheight <= 0.9:
+        #     return wheight
+        # else:
+        #     return 0.9
 
 
     def update_dist(self,data):
@@ -53,6 +56,10 @@ class SOM:
         delta_w = x-w
         w = w + eta*delta_w
         self.nodes[idx] = w 
+
+    def wheight_function(self,x):
+        out = x/(1+x) #abs not necessary, since x is distance
+        return out
     
     def train(self,epochs, eta, data, num_neighbours_start, num_neighbours_end,circular):
         for ep in range(epochs):
@@ -68,14 +75,15 @@ class SOM:
                     self.update(i,x,wheight * eta)
                 self.update_dist(data)
 
-    def get_grid_range(self,idn, num_neighbours):
+    def get_grid_range(self,idn, neighbour_dist):
         '''returns all indices which are going to be updated according to num_neighbours in a 2dim grid
         the n neigbour grid is computed by the shortest distance of the position of tuples in the grid
-        (this seemed to be the easiest way)'''
-        idx = self.mapping[idn]
-        temp = sorted(self.tupels, key=lambda x: np.linalg.norm(x-idx,ord=2))[:num_neighbours]
-        neigbours = [self.reverse_mapping[tuple(n)] for n in temp]
-        return neigbours
+        given some distance. (Note: num_neighbours is now a radius) '''
+        row = self.grid_dist[idn]
+        neighbours = [i for i,v in enumerate(row) if v <= neighbour_dist]
+        # temp = sorted(self.tupels, key=lambda x: np.linalg.norm(x-idx,ord=2))[:num_neighbours]
+        # neigbours = [self.reverse_mapping[tuple(n)] for n in temp]
+        return neighbours
 
     def get_range(self, circular, idx,num_neighbours):
         '''returns all indices which are going to be updated according to num_neighbours'''
