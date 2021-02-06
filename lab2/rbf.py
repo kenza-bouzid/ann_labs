@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from numpy.core.numeric import indices
 from scipy.sparse.construct import rand
 from sklearn.utils import shuffle
-import tqdm as tqdm
+from tqdm import tqdm
 import random
 
 
