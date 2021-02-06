@@ -59,9 +59,10 @@ def get_optimal_n_nodes(error, n_nodes):
     if optimal:
         for i in range(len(optimal)):
             print(f"{thresholds[i]}{optimal[i]}")
-
+    else:
+        print("N_nodes not found for the given thresolds!\n")
     print(
-        f"N_nodes not found for the given thresolds!\nmin_error={min(error)} n_nodes={n_nodes[np.argmin(error)]}\n")
+        f"min_error={min(error)} n_nodes={n_nodes[np.argmin(error)]}\n")
 
 
 def plot_error(n_nodes, error, data, learning_mode, centers_sampling):
