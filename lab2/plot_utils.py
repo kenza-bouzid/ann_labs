@@ -111,7 +111,7 @@ def plot_error_delta(data, n_nodes=10, lr=0.01, max_iters=100):
     plt.show()
 
 
-def plot_estimate(data, centers_sampling=CentersSampling.LINEAR, learning_type='batch', n_nodes=20, delta_max_iters=100, sigma=0.5, delta_lr=0.01, weight=1):
+def plot_estimate(data, centers_sampling=CentersSampling.LINEAR, learning_type='batch', n_nodes=20, delta_max_iters=100, sigma=0.5, delta_lr=0.1, weight=1):
     rbf_net = RBF(centers_sampling, n_nodes=n_nodes,
                   sigma=sigma, weight=weight)
     if learning_type == 'batch':
