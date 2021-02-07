@@ -9,6 +9,7 @@ class CentersSampling(Enum):
     LINEAR = 0 
     WEIGHTED = 1
     DATA = 2
+    RANDOM = 3
 
 class LearningMode(Enum):
     BATCH = 0
@@ -27,7 +28,13 @@ class RBF():
         elif centers_sampling == CentersSampling.DATA:
             self.set_centers_from_data(x, n_nodes, seed)
 
+        elif centers_sampling == CentersSampling.RANDOM:
+            np.random.seed(seed)
+            self.n_nodes = n_nodes
+            self.centers = np.random.rand((n_nodes)) * 2*np.pi
+
         self.sigmas = np.full(self.n_nodes, sigma)
+        self.training_errors = []
     
     def compute_phi(self, x):
         n, N = self.centers.shape[0], x.shape[0]
@@ -37,24 +44,24 @@ class RBF():
                 phi[i, j] = np.exp(-(np.linalg.norm(x[i] -
                                                     self.centers[j])**2) / (2*self.sigmas[j]**2))
         phi = np.array(phi)
-        return phi
+        return np.c_[np.ones(phi.shape[0]), phi]
 
     def batch_learning(self, x, f, x_test, f_test):
         # compute phi
         phi = self.compute_phi(x)
-        phi = np.c_[np.ones(phi.shape[0]), phi]
         # find the weights that minimize the total error = |phi W - f|^2
         w = np.linalg.solve(phi.T @ phi, phi.T @ f)
         # Evaluate the error
         phi_test = self.compute_phi(x_test)
-        phi_test = np.c_[np.ones(phi_test.shape[0]), phi_test]
         f_hat = phi_test @ w
         error = np.mean(abs(f_hat-f_test))
         return f_hat, error
 
     def delta_learning(self, X, f, X_test, f_test, lr=0.01, max_iters=15, seed=42):
         weights = np.random.default_rng(seed).normal(
-            0, 0.5, (self.n_nodes, X.shape[1]))
+            0, 0.5, (self.n_nodes+1, X.shape[1]))
+
+        self.training_errors = []
 
         for _ in tqdm(range(max_iters)):
             X, f = shuffle(X, f, random_state=seed)
@@ -64,9 +71,12 @@ class RBF():
                 except:
                     phi = self.compute_phi(np.array([x]))
                 f_arr = np.array(f[idx])
-                test = f_arr - phi @ weights
                 weight_update = lr*(f_arr - phi @ weights).T @ phi
                 weights += weight_update.T
+
+                phi_train = self.compute_phi(X)
+                f_hat_train = phi_train @ weights
+                self.training_errors.append(np.mean(abs(f_hat_train-f)))
 
         phi_test = self.compute_phi(X_test)
         f_hat = phi_test @ weights
