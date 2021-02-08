@@ -2,18 +2,24 @@ from rbf import RBF
 from dataset import SinusData
 from dataset import SquareData
 from rbf import CentersSampling
+from rbf import LearningMode
+
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_RBF_grid_search(data, weights= [0.6, 0.8, 1, 1.2], n_nodes=[10, 15, 20, 25]):
+def plot_RBF_grid_search(data, weights= [0.6, 0.8, 1, 1.2], n_nodes=[10, 15, 20, 25], learning_mode=LearningMode.BATCH, centers_sampling = CentersSampling.LINEAR):
     results = {}
 
     for n in n_nodes:
         for w in weights:
-            rbf_net = RBF(CentersSampling.LINEAR, n_nodes=n, sigma=w)
-            y_hat, error = rbf_net.batch_learning(
-                data.x, data.y, data.x_test, data.y_test)
+            rbf_net = RBF(centers_sampling, n_nodes=n, n_inter=n, sigma=w)
+            if learning_mode == LearningMode.BATCH:
+                y_hat, error = rbf_net.batch_learning(
+                    data.x, data.y, data.x_test, data.y_test)
+            else:
+                y_hat, error = rbf_net.delta_learning(
+                    data.x, data.y, data.x_test, data.y_test, max_iters=20, lr=0.001)
             results[(rbf_net.n_nodes, w)] = error
 
     keys = np.array(list(results.keys()))
