@@ -6,9 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_RBF_grid_search(data):
-    n_nodes = [10, 15, 20, 25]
-    weights = [0.6, 0.8, 1, 1.2]
+def plot_RBF_grid_search(data, weights= [0.6, 0.8, 1, 1.2], n_nodes=[10, 15, 20, 25]):
     results = {}
 
     for n in n_nodes:

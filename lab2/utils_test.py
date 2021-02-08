@@ -3,9 +3,11 @@ from rbf import LearningMode
 from rbf import CentersSampling
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
+from mpl_toolkits.mplot3d import Axes3D
 
 
-def experiment(data, learning_mode, centers_sampling, n_nodes=None, error=None, n=20, n_iter=3, weight=1.0, drop=2**9-1, sigma=1.0):
+def experiment(data, learning_mode, centers_sampling, n_nodes=None, error=None, n=20, n_iter=3, weight=1.0, drop=2**9-1, sigma=1.0, neigh=1):
 
     rbf_net = RBF(centers_sampling, n_nodes=n, n_inter=n_iter,
                   weight=weight, drop=drop, x=data.x, sigma=sigma)
@@ -18,22 +20,25 @@ def experiment(data, learning_mode, centers_sampling, n_nodes=None, error=None, 
             data.x, data.y, data.x_test, data.y_test)
     else:
         y_hat, err = rbf_net.hybrid_learning(
-            data.x, data.y, data.x_test, data.y_test)
+            data.x, data.y, data.x_test, data.y_test, neigh=neigh)
 
-    if n_nodes!=None and error!=None:
+    if n_nodes != None and error != None:
         n_nodes.append(rbf_net.n_nodes)
         error.append(err)
 
-    return y_hat, err, rbf_net.centers, rbf_net.n_nodes
+    return y_hat, err, rbf_net
 
 
 def experiment_nodes(data, learning_mode, centers_sampling, weight=1.0, drop=2**9-1, sigma=1.0):
     error = []
     n_nodes = []
-    start, end = 4, 40
+    start, end = 4, 14
 
     if centers_sampling == CentersSampling.WEIGHTED:
         start, end = 0, 7
+
+    # if centers_sampling == CentersSampling.DATA:
+    #     start, end = 20, 60
 
     for i in range(start, end):
         experiment(data, learning_mode, centers_sampling,
@@ -77,11 +82,12 @@ def plot_error(n_nodes, error, data, learning_mode, centers_sampling):
     plt.show()
 
 
-def plot_estimate(data, type, learning_mode, centers_sampling, n=20, n_iter=3, weight=1.0, drop=2**9-1, sigma=1.0):
+def plot_estimate(data, type, learning_mode, centers_sampling, n=20, n_iter=3, weight=1.0, drop=2**9-1, sigma=1.0, plot_convergence=False, neigh=1):
 
-    y_hat, error, centers, n_nodes = experiment(
-        data, learning_mode, centers_sampling, n=n, n_iter=n_iter, weight=weight, drop=drop, sigma=sigma)
+    y_hat, error, rbf_net = experiment(
+        data, learning_mode, centers_sampling, n=n, n_iter=n_iter, weight=weight, drop=drop, sigma=sigma, neigh=neigh)
 
+    centers, n_nodes = rbf_net.centers, rbf_net.n_nodes
     plt.plot(data.x_test, data.y_test, label="Target")
     plt.plot(data.x_test, y_hat, label="Estimate")
     plt.scatter(centers, [0]*n_nodes, c="r", label="RBF Centers")
@@ -93,6 +99,72 @@ def plot_estimate(data, type, learning_mode, centers_sampling, n=20, n_iter=3, w
     plt.grid(True)
     plt.savefig(
         f"images/{type}/{type}_{learning_mode.name}_{centers_sampling.name}.png")
+    plt.show()
+
+    if plot_convergence:
+        plt.plot(rbf_net.training_errors)
+        plt.xlabel("Sample number")
+        plt.ylabel('absolute residual error')
+        plt.title(f'Train error for RBF network with CL')
+        plt.show()
+
+
+def plot_RBF_centers_2d(data, n=4, sigma=1.0, neigh=1):
+
+    y_hat, error, rbf_net = experiment(
+        data, LearningMode.HYBRID, CentersSampling.DATA, n=n, sigma=sigma, neigh=neigh)
+
+    centers, n_nodes = rbf_net.centers, rbf_net.n_nodes
+    plt.scatter(data.x[:, 0], data.x[:, 1], label="Patterns")
+    plt.scatter(centers[:, 0], centers[:, 1], label="RBF Centers")
+    # plt.scatter(centers, [0]*n_nodes, c="r", label="RBF Centers")
+    plt.xlabel("angle")
+    plt.ylabel("velocity")
+    plt.title(
+        f"Position of RBF centers, {n} nodes, {sigma} sigma")
+    plt.legend()
+    plt.savefig(
+        f"images/2d/centers_{n}_{sigma}.png")
+    plt.show()
+
+    plt.scatter(data.y[:, 0], data.x[:, 1], label="Patterns")
+    plt.scatter(centers[:, 0], centers[:, 1], label="RBF Centers")
+    # plt.scatter(centers, [0]*n_nodes, c="r", label="RBF Centers")
+    plt.xlabel("angle")
+    plt.ylabel("velocity")
+    plt.title(
+        f"Position of RBF centers, {n} nodes, {sigma} sigma")
+    plt.legend()
+    plt.savefig(
+        f"images/2d/centers_{n}_{sigma}.png")
+    plt.show()
+    return y_hat, centers
+
+
+def plot_RBF_predictions_3d(data, n=4, sigma=1.0, neigh=1, axis=0):
+    y_hat, error, rbf_net = experiment(
+        data, LearningMode.HYBRID, CentersSampling.DATA, n=n, sigma=sigma, neigh=neigh)
+    centers, n_nodes = rbf_net.centers, rbf_net.n_nodes
+    sns.set(style="darkgrid")
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    x = data.x_test[:, 0]
+    y = data.x_test[:, 1]
+    z = data.y_test[:, axis]
+
+    ax.set_xlabel("angle")
+    ax.set_ylabel("velocity")
+    zlabel = 'distance' if axis == 0 else 'height'
+    ax.set_zlabel(zlabel)
+
+    ax.plot_trisurf(x, y, z)
+    ax.plot_trisurf(x, y, y_hat[:, axis])
+    ax.scatter(centers[:, 0], centers[:, 1], np.zeros(
+        (centers.shape[0])), label='centers')
+    plt.title(f'RBF predictions for {zlabel}, {n_nodes} nodes, error={error}')
+    # plt.legend()
     plt.show()
 
 

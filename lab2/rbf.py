@@ -85,6 +85,7 @@ class RBF():
 
     def competitive_learning(self, X, eta=0.1, neigh=3, max_iter=60, seed=42):
         np.random.seed(seed)
+        annealing_factor = int(max_iter / neigh)
         for i in tqdm(range(max_iter)):
             x = X[np.random.randint(X.shape[0])]
             try:
@@ -94,13 +95,15 @@ class RBF():
                 distances = [[i_c, np.linalg.norm(np.array(
                     [x]) - np.array([self.centers[i_c]]))] for i_c in range(len(self.centers))]
 
-            distances.sort(key=lambda x: x[1])
-            for i in range(neigh):
-                coef = eta / (distances[i][1] + 1)
-                self.centers[distances[i][0]] += coef * \
-                    (x - self.centers[distances[i][0]])
+            distances.sort(key=lambda x: x[1])    
+            for n in range(neigh):
+                coef = eta / (distances[n][1] + 1)
+                self.centers[distances[n][0]] += coef * \
+                    (x - self.centers[distances[n][0]])
+            if (i+1) % annealing_factor == 0:
+                neigh = 1 if neigh <= 2 else neigh-1
 
-    def hybrid_learning(self, X, f, X_test, f_test, lr=0.01, max_iters=250, seed=42, eta=0.1, neigh=3):
+    def hybrid_learning(self, X, f, X_test, f_test, lr=0.1, max_iters=20, seed=42, eta=0.1, neigh=3):
         self.competitive_learning(X, eta, neigh)
         f_hat, error = self.delta_learning(
             X, f, X_test, f_test, lr, max_iters, seed)
