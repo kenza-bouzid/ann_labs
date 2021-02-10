@@ -1,8 +1,10 @@
 import numpy as np
 from sklearn.utils import shuffle
+from sklearn.cluster import KMeans
 from tqdm import tqdm
 import random
 from enum import Enum
+import matplotlib.pyplot as plt
 
 
 class CentersSampling(Enum):
@@ -11,6 +13,7 @@ class CentersSampling(Enum):
     DATA = 2
     RANDOM = 3
     UNIFORM = 4
+    KMEANS = 5
 
 class LearningMode(Enum):
     BATCH = 0
@@ -36,6 +39,9 @@ class RBF():
         
         elif centers_sampling == CentersSampling.UNIFORM:
             self.set_centers_uniformly(n_inter=n_inter)
+
+        elif centers_sampling == CentersSampling.KMEANS:
+            self.set_centers_with_kmeans(x, n_nodes)
 
         self.sigmas = np.full(self.n_nodes, sigma)
         self.training_errors = []
@@ -88,7 +94,7 @@ class RBF():
         error = np.mean(abs(f_hat-f_test))
         return f_hat, error
 
-    def competitive_learning(self, X, eta=0.2, neigh=3, max_iter=200, seed=42):
+    def competitive_learning(self, X, eta=0.2, neigh=3, max_iter=100, seed=42):
         np.random.seed(seed)
         annealing_factor = int(max_iter / neigh)
         for i in tqdm(range(max_iter)):
@@ -108,7 +114,7 @@ class RBF():
             if (i+1) % annealing_factor == 0:
                 neigh = 1 if neigh <= 2 else neigh-1
 
-    def hybrid_learning(self, X, f, X_test, f_test, lr=0.1, max_iters=20, seed=123, eta=0.1, neigh=3):
+    def hybrid_learning(self, X, f, X_test, f_test, lr=0.1, max_iters=20, seed=42, eta=0.1, neigh=3):
         self.competitive_learning(X, eta, neigh)
         f_hat, error = self.delta_learning(
             X, f, X_test, f_test, lr, max_iters, seed)
@@ -150,3 +156,10 @@ class RBF():
         xx, yy = xx.reshape(self.n_nodes), yy.reshape(self.n_nodes)
         self.centers = np.column_stack((xx, yy))
 
+    def set_centers_with_kmeans(self, x, n_nodes):
+        print("KMEANS")
+        kmeans = KMeans(n_clusters=n_nodes, random_state=0).fit(x)
+        self.centers = kmeans.cluster_centers_
+        plt.scatter(self.centers[:, 0], self.centers[:, 1])
+        plt.show()
+        self.n_nodes = n_nodes

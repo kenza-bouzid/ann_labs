@@ -1,5 +1,7 @@
 #%%
+from sklearn.cluster import KMeans
 from rbf import CentersSampling
+from dataset import SinusData
 from rbf import RBF
 from rbf import LearningMode
 import matplotlib.pyplot as plt
@@ -16,7 +18,7 @@ test = np.loadtxt('data_lab2/balltest.dat')
 data = Data(train[:, :2], train[:, 2:], test[:, :2], test[:, 2:])
 #%%
 importlib.reload(ut)
-ut.plot_RBF_centers_2d(data, n=4, sigma=1.0, neigh=1)
+ut.plot_RBF_centers_2d(data, n=4, sigma=1.0, neigh=1, centers_sampling=CentersSampling.KMEANS)
 #%%
 importlib.reload(pu)
 results = pu.plot_RBF_grid_search(data, weights=[0.1, 0.2, 0.3, 0.4], n_nodes=[1, 2, 3, 4, 5, 6, 7], learning_mode=LearningMode.DELTA, centers_sampling = CentersSampling.UNIFORM)
@@ -42,4 +44,21 @@ plt.show()
 #%%
 importlib.reload(ut)
 y_hat_, error_, centers_ = ut.plot_surface_predictions(
-    data, n=2, sigma=0.4, neigh=4, max_iter=200, lr=0.001, centers_sampling=CentersSampling.UNIFORM)
+    data, n=4, sigma=0.4, neigh=4, max_iter=200, lr=0.001, centers_sampling=CentersSampling.KMEANS)
+#%%
+y_hat_, error_, centers_ = ut.plot_surface_predictions(
+    data, n=4, sigma=0.1, neigh= 2, max_iter=500, lr=0.001, centers_sampling = CentersSampling.UNIFORM)
+#%%
+kmeans = KMeans(n_clusters=4, random_state=0).fit(data.x)
+centers = kmeans.cluster_centers_
+plt.scatter(centers[:,0], centers[:, 1])
+#%%
+sin_data = SinusData(noise=False)
+importlib.reload(ut)
+ut.plot_estimate(sin_data, type="sinus", learning_mode=LearningMode.DELTA,
+                 centers_sampling=CentersSampling.LINEAR, n=20, sigma=0.5)
+#%%
+#%%
+importlib.reload(ut)
+ut.plot_estimate(sin_data, type="sinus", learning_mode=LearningMode.BATCH,
+                 centers_sampling=CentersSampling.LINEAR, n=20, sigma=0.5)

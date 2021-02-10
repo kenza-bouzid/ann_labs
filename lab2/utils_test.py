@@ -17,7 +17,7 @@ def experiment(data, learning_mode, centers_sampling, n_nodes=None, error=None, 
             data.x, data.y, data.x_test, data.y_test)
     elif learning_mode == LearningMode.DELTA:
         y_hat, err = rbf_net.delta_learning(
-            data.x, data.y, data.x_test, data.y_test, lr=lr, max_iter=max_iter)
+            data.x, data.y, data.x_test, data.y_test, lr=lr, max_iters=max_iter)
     else:
         y_hat, err = rbf_net.hybrid_learning(
             data.x, data.y, data.x_test, data.y_test, lr=lr, neigh=neigh, max_iters=max_iter)
@@ -91,7 +91,7 @@ def plot_estimate(data, type, learning_mode, centers_sampling, n=20, n_iter=3, w
     plt.xlabel("x")
     plt.ylabel("y")
     plt.title(
-        f"Target vs Predictions, {n_nodes} hidden nodes, {sigma} sigma, error= {round(error,5)}")
+        f"{learning_mode.name}-Target vs Predictions, {n_nodes} nodes, {sigma} sigma, error= {round(error,5)}")
     plt.legend()
     plt.grid(True)
     plt.savefig(
@@ -105,10 +105,10 @@ def plot_estimate(data, type, learning_mode, centers_sampling, n=20, n_iter=3, w
         plt.title(f'Train error for RBF network with CL')
         plt.show()
 
-def plot_RBF_centers_2d(data, n=4, sigma=1.0, neigh=1):
+def plot_RBF_centers_2d(data, n=4, sigma=1.0, neigh=1, centers_sampling=CentersSampling.UNIFORM):
 
     y_hat, error, rbf_net = experiment(
-        data, LearningMode.HYBRID, CentersSampling.UNIFORM, n_iter=n, sigma=sigma, neigh=neigh)
+        data, LearningMode.HYBRID, centers_sampling, n_iter=n, sigma=sigma, neigh=neigh)
 
     centers, n_nodes = rbf_net.centers, rbf_net.n_nodes
     plt.scatter(data.x[:, 0], data.x[:, 1], label="Patterns")
@@ -154,7 +154,7 @@ def plot_RBF_predictions_3d(data, y_hat, error, centers, n_nodes, axis=0):
 
 def plot_surface_predictions(data, n=4, sigma=1.0, neigh=1, max_iter=100, lr=0.1, centers_sampling=CentersSampling.UNIFORM):
     y_hat, error, rbf_net = experiment(
-        data, LearningMode.HYBRID, centers_sampling, n_iter=n, sigma=sigma, neigh=neigh, max_iter=max_iter, lr=lr)
+        data, LearningMode.HYBRID, centers_sampling, n=n, n_iter=n, sigma=sigma, neigh=neigh, max_iter=max_iter, lr=lr)
     centers, n_nodes = rbf_net.centers, rbf_net.n_nodes
 
     plot_RBF_predictions_3d(data, y_hat, error, centers, n_nodes, axis=0)
