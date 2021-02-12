@@ -25,7 +25,7 @@ class HopfieldNetwork():
             binary = bin(i)[2:].zfill(self.N)
             pattern = np.array([int(bit) for bit in binary])
             pattern[pattern == 0] = -1
-            _, fixed = self.update_rule(pattern, max_iter=self.max_iter, verbose=False)
+            _, fixed, _ = self.update_rule(pattern, max_iter=self.max_iter, verbose=False)
             try:
                 ind, state = self.is_in_states(fixed)
             except:
@@ -45,6 +45,7 @@ class HopfieldNetwork():
 
     def update_rule(self, pattern, max_iter, sync=True, verbose=True):
         inter_patterns = []
+        energy = []
         for i in range(max_iter):
             inter_patterns.append(pattern)
             if sync:
@@ -52,24 +53,16 @@ class HopfieldNetwork():
             else: 
                 ind = np.random.randint(0, self.N, 1)
                 pattern[ind] = np.sign(self.W[ind,:] @ pattern)
+                
+            new_energy = self.energy(pattern)
+            # if new_energy == energy[-1]:
+            #     break 
+            energy.append(new_energy)
         if verbose:
             self.print_result(i, pattern)
         inter_patterns = np.array(inter_patterns)
-        return inter_patterns, pattern
+        return inter_patterns, pattern, energy
 
-    def update_rule_with_energy(self, pattern, max_iters, sync=True):
-        old_pattern = pattern
-        for i in range(max_iters):
-            if sync:
-                pattern = np.sign(self.W @ pattern)
-            else:
-                ind = np.random.randint(0, self.N, 1)
-                pattern[ind] = np.sign(self.W[ind, :] @ pattern)
-            if pattern == old_pattern:
-                break
-        self.print_result(i, pattern)
-        pass
-
-    def energy(self, state_ind):
-        return -0.5 * self.states[state_ind] @ self.W @ self.states[state_ind]
+    def energy(self, state):
+        return - state @ self.W @ state
     
