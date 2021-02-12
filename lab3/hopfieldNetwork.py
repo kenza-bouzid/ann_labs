@@ -54,7 +54,22 @@ class HopfieldNetwork():
                 pattern[ind] = np.sign(self.W[ind,:] @ pattern)
         if verbose:
             self.print_result(i, pattern)
+        inter_patterns = np.array(inter_patterns)
         return inter_patterns, pattern
 
+    def update_rule_with_energy(self, pattern, max_iters, sync=True):
+        old_pattern = pattern
+        for i in range(max_iters):
+            if sync:
+                pattern = np.sign(self.W @ pattern)
+            else:
+                ind = np.random.randint(0, self.N, 1)
+                pattern[ind] = np.sign(self.W[ind, :] @ pattern)
+            if pattern == old_pattern:
+                break
+        self.print_result(i, pattern)
+        pass
 
+    def energy(self, state_ind):
+        return -0.5 * self.states[state_ind] @ self.W @ self.states[state_ind]
     
