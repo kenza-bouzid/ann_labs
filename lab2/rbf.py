@@ -1,14 +1,19 @@
 import numpy as np
 from sklearn.utils import shuffle
+from sklearn.cluster import KMeans
 from tqdm import tqdm
 import random
 from enum import Enum
+import matplotlib.pyplot as plt
 
 
 class CentersSampling(Enum):
     LINEAR = 0 
     WEIGHTED = 1
     DATA = 2
+    RANDOM = 3
+    UNIFORM = 4
+    KMEANS = 5
 
 class LearningMode(Enum):
     BATCH = 0
@@ -27,7 +32,19 @@ class RBF():
         elif centers_sampling == CentersSampling.DATA:
             self.set_centers_from_data(x, n_nodes, seed)
 
+        elif centers_sampling == CentersSampling.RANDOM:
+            np.random.seed(seed)
+            self.n_nodes = n_nodes
+            self.centers = np.random.rand((n_nodes)) * 2*np.pi
+        
+        elif centers_sampling == CentersSampling.UNIFORM:
+            self.set_centers_uniformly(n_inter=n_inter)
+
+        elif centers_sampling == CentersSampling.KMEANS:
+            self.set_centers_with_kmeans(x, n_nodes)
+
         self.sigmas = np.full(self.n_nodes, sigma)
+        self.training_errors = []
     
     def compute_phi(self, x):
         n, N = self.centers.shape[0], x.shape[0]
@@ -37,24 +54,25 @@ class RBF():
                 phi[i, j] = np.exp(-(np.linalg.norm(x[i] -
                                                     self.centers[j])**2) / (2*self.sigmas[j]**2))
         phi = np.array(phi)
-        return phi
+        return np.c_[np.ones(phi.shape[0]), phi]
 
     def batch_learning(self, x, f, x_test, f_test):
         # compute phi
         phi = self.compute_phi(x)
-        phi = np.c_[np.ones(phi.shape[0]), phi]
         # find the weights that minimize the total error = |phi W - f|^2
         w = np.linalg.solve(phi.T @ phi, phi.T @ f)
         # Evaluate the error
         phi_test = self.compute_phi(x_test)
-        phi_test = np.c_[np.ones(phi_test.shape[0]), phi_test]
         f_hat = phi_test @ w
         error = np.mean(abs(f_hat-f_test))
         return f_hat, error
 
     def delta_learning(self, X, f, X_test, f_test, lr=0.01, max_iters=15, seed=42):
-        weights = np.random.default_rng(seed).normal(
-            0, 0.5, (self.n_nodes, X.shape[1]))
+        np.random.seed(seed)
+        weights = np.random.normal(
+            0, 0.5, (self.n_nodes+1, X.shape[1]))
+
+        self.training_errors = []
 
         for _ in tqdm(range(max_iters)):
             X, f = shuffle(X, f, random_state=seed)
@@ -64,17 +82,21 @@ class RBF():
                 except:
                     phi = self.compute_phi(np.array([x]))
                 f_arr = np.array(f[idx])
-                test = f_arr - phi @ weights
                 weight_update = lr*(f_arr - phi @ weights).T @ phi
                 weights += weight_update.T
+
+                phi_train = self.compute_phi(X)
+                f_hat_train = phi_train @ weights
+                self.training_errors.append(np.mean(abs(f_hat_train-f)))
 
         phi_test = self.compute_phi(X_test)
         f_hat = phi_test @ weights
         error = np.mean(abs(f_hat-f_test))
         return f_hat, error
 
-    def competitive_learning(self, X, eta=0.1, neigh=3, max_iter=60, seed=42):
+    def competitive_learning(self, X, eta=0.2, neigh=3, max_iter=100, seed=42):
         np.random.seed(seed)
+        annealing_factor = int(max_iter / neigh)
         for i in tqdm(range(max_iter)):
             x = X[np.random.randint(X.shape[0])]
             try:
@@ -84,13 +106,15 @@ class RBF():
                 distances = [[i_c, np.linalg.norm(np.array(
                     [x]) - np.array([self.centers[i_c]]))] for i_c in range(len(self.centers))]
 
-            distances.sort(key=lambda x: x[1])
-            for i in range(neigh):
-                coef = eta / (distances[i][1] + 1)
-                self.centers[distances[i][0]] += coef * \
-                    (x - self.centers[distances[i][0]])
+            distances.sort(key=lambda x: x[1])    
+            for n in range(neigh):
+                coef = eta / (distances[n][1] + 1)
+                self.centers[distances[n][0]] += coef * \
+                    (x - self.centers[distances[n][0]])
+            if (i+1) % annealing_factor == 0:
+                neigh = 1 if neigh <= 2 else neigh-1
 
-    def hybrid_learning(self, X, f, X_test, f_test, lr=0.01, max_iters=250, seed=42, eta=0.1, neigh=3):
+    def hybrid_learning(self, X, f, X_test, f_test, lr=0.1, max_iters=20, seed=42, eta=0.1, neigh=3):
         self.competitive_learning(X, eta, neigh)
         f_hat, error = self.delta_learning(
             X, f, X_test, f_test, lr, max_iters, seed)
@@ -124,4 +148,18 @@ class RBF():
         indices = random.sample(range(len(x)), n_nodes)
         self.centers = x[indices]
         
+    def set_centers_uniformly(self, n_inter):
+        self.n_nodes = n_inter * n_inter
+        x = np.linspace(0, 1, n_inter)
+        y = np.linspace(0, 1, n_inter)
+        xx, yy = np.meshgrid(x, y)
+        xx, yy = xx.reshape(self.n_nodes), yy.reshape(self.n_nodes)
+        self.centers = np.column_stack((xx, yy))
 
+    def set_centers_with_kmeans(self, x, n_nodes):
+        print("KMEANS")
+        kmeans = KMeans(n_clusters=n_nodes, random_state=0).fit(x)
+        self.centers = kmeans.cluster_centers_
+        plt.scatter(self.centers[:, 0], self.centers[:, 1])
+        plt.show()
+        self.n_nodes = n_nodes
