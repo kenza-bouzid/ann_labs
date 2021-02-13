@@ -44,24 +44,27 @@ class HopfieldNetwork():
             print(pattern, "\n")
 
     def update_rule(self, pattern, max_iter, sync=True, verbose=True):
+        old_pattern = pattern.copy()
+        new_pattern = pattern.copy()
         inter_patterns = []
         energy = []
         for i in range(max_iter):
-            inter_patterns.append(pattern)
+            inter_patterns.append(old_pattern)
             if sync:
-                pattern = np.sign(self.W @ pattern)
+                new_pattern = np.sign(self.W @ old_pattern)
             else: 
                 ind = np.random.randint(0, self.N, 1)
-                pattern[ind] = np.sign(self.W[ind,:] @ pattern)
+                new_pattern[ind] = np.sign(self.W[ind,:] @ old_pattern)
                 
-            new_energy = self.energy(pattern)
-            # if new_energy == energy[-1]:
-            #     break 
+            new_energy = self.energy(old_pattern)
+            # if i > 1 and new_energy == energy[-1]:
+                # break 
             energy.append(new_energy)
+            old_pattern = new_pattern.copy()
         if verbose:
-            self.print_result(i, pattern)
+            self.print_result(i, new_pattern)
         inter_patterns = np.array(inter_patterns)
-        return inter_patterns, pattern, energy
+        return inter_patterns, new_pattern, energy
 
     def energy(self, state):
         return - state @ self.W @ state
