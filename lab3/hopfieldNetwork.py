@@ -12,6 +12,10 @@ class HopfieldNetwork():
     def check_storage(self):
         for s in self.states:
             self.update_rule(s, self.max_iter)
+    
+    def check_capacity(self):
+        for s in self.states:
+            self.update_rule(s, self.max_iter)
 
     def is_in_states(self, pattern):
         for i, s in enumerate(self.states):
