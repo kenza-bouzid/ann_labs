@@ -15,6 +15,7 @@ class SOM:
     def generate_nodes(self,num_nodes,num_features,seed):
         np.random.seed(seed)
         return np.random.rand(self.num_nodes,num_features)
+        #return np.random.randn(self.num_nodes, num_features)
 
     def create_mapping(self,grid):
         '''reuturns list of 2d coordinates and the mapping plus its inverse'''
@@ -22,7 +23,7 @@ class SOM:
         y = range(grid[1])
         #this builds the cartesian product
         c_product = np.transpose([np.repeat(y, len(x)),np.tile(x, len(y))])
-        grid_dist = distance_matrix(c_product,c_product)
+        grid_dist = distance_matrix(c_product,c_product,p=1)
         mapping = {i:np.array(c) for i,c in enumerate(c_product)}
         reverse = {tuple(c):i for i,c in enumerate(c_product)}
         return grid_dist, mapping, reverse
