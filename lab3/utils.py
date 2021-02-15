@@ -27,7 +27,7 @@ def plot_distortion_resistance(hop_net, patterns, pattern_num, steps=1):
 
     plt.plot(noise_levels, is_noise_removed)
     plt.xlabel('Noise level')
-    plt.ylabel('Converged 0/1')
+    plt.ylabel('Converged frac.')
     plt.title(
         f'Distortion resistance for pattern {pattern_num}, mean: {round(np.mean(is_noise_removed), 4)}')
         # f'Distortion resistance for pattern {pattern_num}, until {np.where(np.array(is_noise_removed) < 1)[0][0]}% noise')
