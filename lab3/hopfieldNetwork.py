@@ -21,7 +21,7 @@ class HopfieldNetwork():
             p = 1/(self.P* self.N) * np.sum(self.states)
             return (self.states.T-p) @ (self.states-p)
         else:
-            return self.states.T @ self.states
+            return (self.states.T @ self.states) / self.N
 
 
     def check_storage(self):
@@ -89,7 +89,7 @@ class HopfieldNetwork():
             energy.append(new_energy)
             old_pattern = new_pattern.copy()
         if verbose:
-            self.print_result(i, new_pattern)
+            self.print_result(i+1, new_pattern)
         inter_patterns = np.array(inter_patterns)
         return inter_patterns, new_pattern, energy
 
