@@ -36,7 +36,7 @@ class HopfieldNetwork():
         for s in self.states:
             if noise:
                 temp_s = add_noise(s, noise_frac=0.05)
-                _, new_pattern, _ = self.update_rule(s, self.max_iter, verbose=False)
+                _, new_pattern, _ = self.update_rule(temp_s, self.max_iter, verbose=False)
             else:
                 _, new_pattern, _ = self.update_rule(s, 1, verbose=False)
             count = count + np.array_equal(new_pattern, s)

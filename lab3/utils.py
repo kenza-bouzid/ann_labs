@@ -40,3 +40,17 @@ def plot_attractor_for_pattern(hop_net, patterns, pattern_num, noise, steps=1):
         noisy_pattern, steps, verbose=False)
     plt.imshow(patt.reshape((32, 32)), cmap="binary")
     return patt
+
+
+def get_data(n,data):
+    data_ = list()
+    count = 0
+    for d in data:
+        count += 1
+        d = list(d)
+        if data_.count(d) > 0:
+            continue
+        if len(data_) == n:
+            return np.array(data_)
+        data_.append(d)
+    return np.array(data_)
