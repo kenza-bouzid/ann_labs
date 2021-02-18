@@ -1,4 +1,5 @@
-import numpy as np 
+import numpy as np
+from numpy.lib.ufunclike import fix 
 from tqdm import tqdm
 from utils import add_noise
 
@@ -54,10 +55,8 @@ class HopfieldNetwork():
             pattern = np.array([int(bit) for bit in binary])
             pattern[pattern == 0] = -1
             _, fixed, _ = self.update_rule(pattern, max_iter=self.max_iter, verbose=False)
-            try:
-                ind, state = self.is_in_states(fixed)
-            except:
-                attractors.append(pattern)
+            if np.array_equal(fixed, pattern):
+                attractors.append(fixed)
         attractors = np.array(attractors)
         return attractors
 
@@ -71,6 +70,11 @@ class HopfieldNetwork():
             print(f"This pattern is an attractor!")
             print(pattern, "\n")
 
+    def _sign(self, arr):
+        arr[arr >= 0] = 1
+        arr[arr < 0] = -1
+        return arr
+
     def update_rule(self, pattern, max_iter, sync=True, verbose=True):
         old_pattern = pattern.copy()
         new_pattern = pattern.copy()
@@ -79,12 +83,12 @@ class HopfieldNetwork():
         for i in range(max_iter):
             inter_patterns.append(old_pattern)
             if sync:
-                new_pattern = np.sign(self.W @ old_pattern-self.bias)
+                new_pattern = self._sign(self.W @ old_pattern-self.bias)
                 if self.sparse:
                     new_pattern = 0.5 + 0.5 * new_pattern
             else: 
                 ind = np.random.randint(0, self.N, 1)
-                new_pattern[ind] = np.sign(self.W[ind,:] @ old_pattern-self.bias)
+                new_pattern[ind] = self._sign(self.W[ind,:] @ old_pattern-self.bias)
                 if self.sparse:
                     new_pattern[ind] = 0.5 + 0.5 * new_pattern[ind]
                 
