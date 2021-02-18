@@ -1,5 +1,6 @@
 import numpy as np 
 from tqdm import tqdm
+from utils import add_noise
 
 class HopfieldNetwork():
     def __init__(self, patterns, seed=42, sparse=False, bias=0):
@@ -29,10 +30,14 @@ class HopfieldNetwork():
             self.update_rule(s, self.max_iter)
     
 
-    def check_capacity(self):
+    def check_capacity(self,noise=1):
         count = 0
         for s in self.states:
-            _, new_pattern, _ = self.update_rule(s, 1, verbose=False)
+            if noise:
+                temp_s = add_noise(s, noise_frac=0.05)
+                _, new_pattern, _ = self.update_rule(s, self.max_iter, verbose=False)
+            else:
+                _, new_pattern, _ = self.update_rule(s, 1, verbose=False)
             count = count + np.array_equal(new_pattern, s)
         return count   
 
