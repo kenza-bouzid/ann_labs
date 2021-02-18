@@ -74,6 +74,8 @@ class HopfieldNetwork():
             inter_patterns.append(old_pattern)
             if sync:
                 new_pattern = np.sign(self.W @ old_pattern-self.bias)
+                new_pattern[new_pattern >= 0] = 1
+                new_pattern[new_pattern < 0] = -1
                 if self.sparse:
                     new_pattern = 0.5 + 0.5 * new_pattern
             else: 
