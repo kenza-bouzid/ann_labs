@@ -1,4 +1,5 @@
-import numpy as np 
+import numpy as np
+from numpy.lib.ufunclike import fix 
 from tqdm import tqdm
 
 class HopfieldNetwork():
@@ -49,10 +50,8 @@ class HopfieldNetwork():
             pattern = np.array([int(bit) for bit in binary])
             pattern[pattern == 0] = -1
             _, fixed, _ = self.update_rule(pattern, max_iter=self.max_iter, verbose=False)
-            try:
-                ind, state = self.is_in_states(fixed)
-            except:
-                attractors.append(pattern)
+            if np.array_equal(fixed, pattern):
+                attractors.append(fixed)
         attractors = np.array(attractors)
         return attractors
 
