@@ -65,6 +65,11 @@ class HopfieldNetwork():
             print(f"This pattern is an attractor!")
             print(pattern, "\n")
 
+    def _sign(self, arr):
+        arr[arr >= 0] = 1
+        arr[arr < 0] = -1
+        return arr
+
     def update_rule(self, pattern, max_iter, sync=True, verbose=True):
         old_pattern = pattern.copy()
         new_pattern = pattern.copy()
@@ -73,14 +78,12 @@ class HopfieldNetwork():
         for i in range(max_iter):
             inter_patterns.append(old_pattern)
             if sync:
-                new_pattern = np.sign(self.W @ old_pattern-self.bias)
-                new_pattern[new_pattern >= 0] = 1
-                new_pattern[new_pattern < 0] = -1
+                new_pattern = self._sign(self.W @ old_pattern-self.bias)
                 if self.sparse:
                     new_pattern = 0.5 + 0.5 * new_pattern
             else: 
                 ind = np.random.randint(0, self.N, 1)
-                new_pattern[ind] = np.sign(self.W[ind,:] @ old_pattern-self.bias)
+                new_pattern[ind] = self._sign(self.W[ind,:] @ old_pattern-self.bias)
                 if self.sparse:
                     new_pattern[ind] = 0.5 + 0.5 * new_pattern[ind]
                 
