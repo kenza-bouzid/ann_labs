@@ -74,7 +74,7 @@ class RestrictedBoltzmannMachine():
             pvk, vk = self.get_v_given_h(h0)
             phk, _ = self.get_h_given_v(vk)
 
-            self.update_params(v0, ph0, vk, phk)
+            self.update_params(v0, h0, pvk, phk)
 
             # visualize once in a while when visible layer is input images
 
@@ -88,7 +88,7 @@ class RestrictedBoltzmannMachine():
                 ph0, h0 = self.get_h_given_v(visible_trainset)
                 pvk, vk = self.get_v_given_h(h0)
                 print("iteration=%7d recon_loss=%4.4f" %
-                      (it, np.linalg.norm(visible_trainset - pvk)))
+                      (it, np.linalg.norm(visible_trainset - vk)))
 
         return
 
