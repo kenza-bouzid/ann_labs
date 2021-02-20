@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 def sigmoid(support):
     
@@ -107,11 +108,15 @@ def viz_rf(weights,it,grid):
     fig, axs = plt.subplots(grid[0],grid[1],figsize=(grid[1],grid[0]))#,constrained_layout=True)
     plt.subplots_adjust(left=0,bottom=0,right=1,top=1,wspace=0,hspace=0)        
     imax = abs(weights).max()
+    # print("MIN WEIGHT", weights.min(), "MAX WEIGHT", weights.max())
     for x in range(grid[0]):
         for y in range(grid[1]):
             axs[x,y].set_xticks([]);
             axs[x,y].set_yticks([]);
-            axs[x,y].imshow(weights[:,:,y+grid[1]*x], cmap="bwr", vmin=-imax, vmax=imax, interpolation=None)
+            im = axs[x,y].imshow(weights[:,:,y+grid[1]*x], cmap="bwr", vmin=-imax, vmax=imax, interpolation=None)
+            divider = make_axes_locatable(axs[x, y])
+            cax = divider.append_axes('right', size='5%', pad=0.05)
+            fig.colorbar(im, cax=cax, orientation='vertical')
     plt.savefig("hist/rf.iter%06d.png"%it)
     plt.close('all')
 

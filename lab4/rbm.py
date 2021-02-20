@@ -1,5 +1,5 @@
 from util import *
-
+import matplotlib.pyplot as plt
 
 class RestrictedBoltzmannMachine():
     '''
@@ -44,13 +44,13 @@ class RestrictedBoltzmannMachine():
         self.weight_h_to_v = None
         self.learning_rate = 0.01
         self.momentum = 0.7
-        self.print_period = 1000
+        self.print_period = 500
 
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
             "period": 1000,  # iteration period to visualize
             "grid": [5, 5],  # size of the grid
             # pick some random hidden units
-            "ids": np.random.randint(0, self.ndim_hidden, 25)
+            "ids": np.random.randint(0, self.ndim_hidden, 36)
         }
 
     def cd1(self, visible_trainset, n_iterations=10000):
@@ -60,36 +60,43 @@ class RestrictedBoltzmannMachine():
           visible_trainset: training data for this rbm, shape is (size of training set, size of visible layer)
           n_iterations: number of iterations of learning (each iteration learns a mini-batch)
         """
-
+        recon_loss = {"it":[], "loss":[]}
         print("learning CD1")
 
         n_samples = visible_trainset.shape[0]
-        print(n_samples)
+        print("n_samples", n_samples)
 
         for it in range(n_iterations):
             minibatch_start = it * self.batch_size % n_samples
-            minibatch_end = it * self.batch_size + self.batch_size
+            minibatch_end = minibatch_start + self.batch_size
             v0 = visible_trainset[minibatch_start:minibatch_end]
             ph0, h0 = self.get_h_given_v(v0)
             pvk, vk = self.get_v_given_h(h0)
             phk, _ = self.get_h_given_v(vk)
-
             self.update_params(v0, h0, pvk, phk)
 
             # visualize once in a while when visible layer is input images
 
             if it % self.rf["period"] == 0 and self.is_bottom:
-
                 viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape(
                     (self.image_size[0], self.image_size[1], -1)), it=it, grid=self.rf["grid"])
+
+            #print epoch number: 
+            if it % n_samples == 0:
+                print(f'Epoch {it//n_samples}')
 
             # print progress
             if it % self.print_period == 0:
                 ph0, h0 = self.get_h_given_v(visible_trainset)
                 pvk, vk = self.get_v_given_h(h0)
+                recon_loss["it"].append(it)
+                recon_loss["loss"].append(
+                    np.linalg.norm(visible_trainset - vk))
                 print("iteration=%7d recon_loss=%4.4f" %
-                      (it, np.linalg.norm(visible_trainset - vk)))
-
+                      (it, recon_loss["loss"][-1]))
+            
+        self.plot_loss(recon_loss)
+        self.save_weights()
         return
 
     def update_params(self, v_0, h_0, v_k, h_k):
@@ -107,10 +114,12 @@ class RestrictedBoltzmannMachine():
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         vh0 = v_0.T @ h_0
         vh1 = v_k.T @ h_k
+        # print('VH0', vh0.shape, "vH1", vh1.shape)
         lr = self.learning_rate/self.batch_size
-        self.delta_bias_v += lr * np.sum(h_0 - h_k)
-        self.delta_weight_vh += lr * (vh0 - vh1)
-        self.delta_bias_h += lr * np.sum(v_0 - v_k)
+        # ?? delta_bias_v and delta_bias_h inversed + replaced += by = 
+        self.delta_bias_v = self.momentum * self.delta_bias_v + lr * np.sum((v_0 - v_k), axis=0)
+        self.delta_weight_vh = self.momentum * self.delta_weight_vh  + lr * (vh0 - vh1)
+        self.delta_bias_h = self.momentum * self.delta_bias_h + lr * np.sum((h_0 - h_k), axis=0)
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -162,6 +171,7 @@ class RestrictedBoltzmannMachine():
             pass
 
         else:
+            # print("h", hidden_minibatch.shape, 'W', self.weight_vh.shape, 'B', self.bias_v.shape)
             probabilities = sigmoid(self.bias_v + hidden_minibatch @  self.weight_vh.T)
             activations = sample_binary(probabilities)
 
@@ -269,3 +279,16 @@ class RestrictedBoltzmannMachine():
         self.bias_h += self.delta_bias_h
 
         return
+
+    def save_weights(self):
+        np.save("trained_rbm/weights.npy", self.weight_vh)
+        np.save("trained_rbm/bias_v.npy", self.bias_v)
+        np.save("trained_rbm/bias_h.npy", self.bias_h)
+
+    def plot_loss(self, loss):
+        plt.title('Reconstruction loss over training iterations')
+        plt.xlabel('iteration')
+        plt.ylabel('reconstruction loss')
+        plt.plot(loss["it"], loss["loss"])
+        plt.savefig("trained_rbm/loss.png")
+        plt.show()
