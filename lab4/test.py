@@ -31,7 +31,7 @@ if __name__ == "__main__":
     for  i in range(10):
         image = train_imgs[i]
         vk = image
-        for _ in range(10):
+        for _ in range(1000):
             ph0, h0 = rbm.get_h_given_v(vk)
             pvk, vk = rbm.get_v_given_h(h0)
         axs[i, 0].imshow(image.reshape((28,28)))
