@@ -141,7 +141,6 @@ class RestrictedBoltzmannMachine():
         probabilities = sigmoid(self.bias_h + visible_minibatch @  self.weight_vh)
         activations = sample_binary(probabilities)
         
-
         return probabilities, activations
 
     def get_v_given_h(self, hidden_minibatch):
@@ -167,8 +166,19 @@ class RestrictedBoltzmannMachine():
 
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
+            
+            support = self.bias_v + hidden_minibatch @  self.weight_vh.T
+            
+            probabilities_labels = softmax(support[:,:-self.n_labels])
+            activations_labels = sample_categorical(probabilities_labels)
 
-            pass
+            probabilities_h2 = sigmoid(support[:,-self.n_labels:])
+            activations_h2 = sample_binary(probabilities_h2)
+            
+            probabilities = np.concatenate(
+                (probabilities_h2, probabilities_labels), axis=1)
+            activations = np.concatenate(
+                (activations_h2, activations_labels), axis=1)
 
         else:
             # print("h", hidden_minibatch.shape, 'W', self.weight_vh.shape, 'B', self.bias_v.shape)
@@ -179,7 +189,7 @@ class RestrictedBoltzmannMachine():
 
     """ rbm as a belief layer : the functions below do not have to be changed until running a deep belief net """
 
-    def untwine_weights(self):
+    def untwine_weights(self):  
         self.weight_v_to_h = np.copy(self.weight_vh)
         self.weight_h_to_v = np.copy(np.transpose(self.weight_vh))
         self.weight_vh = None
@@ -197,10 +207,11 @@ class RestrictedBoltzmannMachine():
         """
         assert self.weight_v_to_h is not None
         n_samples = visible_minibatch.shape[0]
+        probabilities = sigmoid(self.bias_h + visible_minibatch @  self.weight_v_to_h)
+        activations = sample_binary(probabilities)
+        
+        return probabilities, activations
 
-        # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below)
-
-        return np.zeros((n_samples, self.ndim_hidden)), np.zeros((n_samples, self.ndim_hidden))
 
     def get_v_given_h_dir(self, hidden_minibatch):
         """Compute probabilities p(v|h) and activations v ~ p(v|h)
@@ -229,16 +240,18 @@ class RestrictedBoltzmannMachine():
             # [TODO TASK 4.2] Note that even though this function performs same computation as 'get_v_given_h' but with directed connections,
             # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
             # Appropriate code here is to raise an error (replace pass below)
-
-            pass
+            
+            raise Exception('Top DBN is a bipartite undirected graph!')
 
         else:
 
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
 
-            pass
+            probabilities = sigmoid(self.bias_v + hidden_minibatch @  self.weight_h_to_v)
+            activations = sample_binary(probabilities)
 
-        return np.zeros((n_samples, self.ndim_visible)), np.zeros((n_samples, self.ndim_visible))
+        return probabilities, activations
+
 
     def update_generate_params(self, inps, trgs, preds):
         """Update generative weight "weight_h_to_v" and bias "bias_v"
