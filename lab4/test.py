@@ -20,9 +20,10 @@ if __name__ == "__main__":
                                      batch_size=20
                                      )
     
-    rbm.weights = np.load("trained_rbm/weights.npy")
+    rbm.weight_vh = np.load("trained_rbm/weights.npy")
     rbm.bias_v = np.load("trained_rbm/bias_v.npy")
     rbm.bias_h = np.load("trained_rbm/bias_h.npy")
+
 
     fig, axs = plt.subplots(10, 2, figsize=(12, 12))
     plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
@@ -30,12 +31,14 @@ if __name__ == "__main__":
     # print("MIN WEIGHT", weights.min(), "MAX WEIGHT", weights.max())
     for  i in range(10):
         image = train_imgs[i]
-        vk = image
-        for _ in range(1000):
+        v0 = np.random.binomial(1,0.2,(784,))
+        vk = image.copy()
+        for _ in range(1):
             ph0, h0 = rbm.get_h_given_v(vk)
             pvk, vk = rbm.get_v_given_h(h0)
         axs[i, 0].imshow(image.reshape((28,28)))
-        axs[i, 1].imshow(vk.reshape((28, 28)))
+        axs[i, 1].imshow(pvk.reshape((28, 28)))
+    
     
     plt.savefig("hist/recon.png")
     plt.show()

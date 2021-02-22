@@ -34,14 +34,13 @@ class RestrictedBoltzmannMachine():
         self.delta_bias_h = 0
         self.bias_v = np.zeros(self.ndim_visible)#np.random.normal(loc=0.0, scale=0.01, size=(self.ndim_visible))
         self.weight_vh = np.random.normal(
-            loc=0.0, scale=0.01, size=(self.ndim_visible, self.ndim_hidden))
-        self.bias_h = -4*np.ones(self.ndim_hidden)#np.random.normal(loc=0.0, scale=0.01, size=(self.ndim_hidden))
+            loc=0.0, scale=0.1, size=(self.ndim_visible, self.ndim_hidden))
+        self.bias_h = -4*np.ones((1,self.ndim_hidden))#np.random.normal(loc=0.0, scale=0.01, size=(self.ndim_hidden))
         self.delta_weight_v_to_h = 0
         self.delta_weight_h_to_v = 0
         self.weight_v_to_h = None
         self.weight_h_to_v = None
-        self.learning_rate = 0.01
-        self.momentum = 0.0
+        self.learning_rate = 0.1
         self.print_period = 500
 
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
@@ -63,30 +62,16 @@ class RestrictedBoltzmannMachine():
 
         n_samples = visible_trainset.shape[0]
         print("n_samples", n_samples)
-        probv0 = np.sum(visible_trainset, axis=0)/self.batch_size
-        probv0 = np.tile(probv0,(visible_trainset.shape[0],1))
-        probv0[visible_trainset==0] = 1-probv0[visible_trainset==0]
-
-
+    
         for it in range(n_iterations):
             minibatch_start = it * self.batch_size % n_samples
             minibatch_end = minibatch_start + self.batch_size
-            v0 = visible_trainset[minibatch_start:minibatch_end]
-            statv0 = probv0[minibatch_start:minibatch_end]
-
-
-            
-
-            #print('v0.shape = ',v0.shape)
+            v0 = visible_trainset[minibatch_start:minibatch_end,:]
             ph0, h0 = self.get_h_given_v(v0)
-            #print('h0.shape = ',h0.shape)
-            #print('ph0.shape = ',ph0.shape)
             pvk, vk = self.get_v_given_h(h0)
             phk, _ = self.get_h_given_v(vk)
-            #print('pvk.shape = ',pvk.shape)
-            #print('vk.shape = ',vk.shape)
-            #print('phk.shape = ',phk.shape)
-            self.update_params(statv0, h0, pvk, phk)
+            momentum = 0.5 if 120000/self.batch_size < it else 0.9
+            self.update_params(v0, h0, pvk, phk, momentum)
 
             # visualize once in a while when visible layer is input images
 
@@ -112,7 +97,7 @@ class RestrictedBoltzmannMachine():
         self.save_weights()
         return
 
-    def update_params(self, v_0, h_0, v_k, h_k):
+    def update_params(self, v_0, h_0, v_k, h_k, momentum):
         """Update the weight and bias parameters.
         You could also add weight decay and momentum for weight updates.
 
@@ -130,9 +115,10 @@ class RestrictedBoltzmannMachine():
         # print('VH0', vh0.shape, "vH1", vh1.shape)
         lr = self.learning_rate/self.batch_size
         # ?? delta_bias_v and delta_bias_h inversed + replaced += by = 
-        self.delta_bias_v = self.momentum * self.delta_bias_v + lr * np.sum((v_0 - v_k), axis=0)
-        self.delta_weight_vh = self.momentum * self.delta_weight_vh  + lr * (vh0 - vh1)
-        self.delta_bias_h = self.momentum * self.delta_bias_h + lr * np.sum((h_0 - h_k), axis=0)
+
+        self.delta_bias_v = momentum * self.delta_bias_v + lr * np.sum((v_0 - v_k), axis=0)
+        self.delta_weight_vh = momentum * self.delta_weight_vh  + lr * (vh0 - vh1)
+        self.delta_bias_h = momentum * self.delta_bias_h + lr * np.sum((h_0 - h_k), axis=0)
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -151,7 +137,7 @@ class RestrictedBoltzmannMachine():
         """
         assert self.weight_vh is not None
         n_samples = visible_minibatch.shape[0]
-        probabilities = sigmoid(self.bias_h + visible_minibatch @  self.weight_vh)
+        probabilities = sigmoid(self.bias_h + (visible_minibatch @ self.weight_vh))
         activations = sample_binary(probabilities)
         
 
@@ -185,7 +171,7 @@ class RestrictedBoltzmannMachine():
 
         else:
             # print("h", hidden_minibatch.shape, 'W', self.weight_vh.shape, 'B', self.bias_v.shape)
-            probabilities = sigmoid(self.bias_v + hidden_minibatch @  self.weight_vh.T)
+            probabilities = sigmoid(self.bias_v + (hidden_minibatch @ self.weight_vh.T))
             activations = sample_binary(probabilities)
 
         return probabilities, activations
