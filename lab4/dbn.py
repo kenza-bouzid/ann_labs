@@ -154,8 +154,8 @@ class DeepBeliefNet():
             """ 
             CD-1 training for pen+lbl--top 
             """
-            p_labels = self.clamp_labels(lbl_trainset)
-            ph2_plabels = np.concatenate((ph2, p_labels), axis=1)
+            # p_labels = self.clamp_labels(lbl_trainset)
+            ph2_plabels = np.concatenate((ph2, lbl_trainset), axis=1)
             self.rbm_stack["pen+lbl--top"].cd1(visible_trainset=ph2_plabels,
                                            n_iterations=n_iterations)
             self.savetofile_rbm(loc="trained_rbm",name="pen+lbl--top")            

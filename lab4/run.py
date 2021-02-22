@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     image_size = [28, 28]
     train_imgs, train_lbls, test_imgs, test_lbls = read_mnist(
-        dim=image_size, n_train=1000, n_test=10000)
+        dim=image_size, n_train=60000, n_test=10000)
 
     # ''' restricted boltzmann machine '''
 
@@ -36,9 +36,9 @@ if __name__ == "__main__":
     ''' greedy layer-wise training '''
 
     dbn.train_greedylayerwise(vis_trainset=train_imgs,
-                              lbl_trainset=train_lbls, n_iterations=6000)
+                              lbl_trainset=train_lbls, n_iterations=5000)
 
-    dbn.recognize(train_imgs[:10, :], train_lbls[:10, :])
+    # dbn.recognize(train_imgs[:10, :], train_lbls[:10, :])
 
     # dbn.recognize(test_imgs, test_lbls)
 
