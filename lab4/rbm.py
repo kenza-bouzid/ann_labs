@@ -291,5 +291,5 @@ class RestrictedBoltzmannMachine():
         plt.ylabel('reconstruction loss')
         plt.plot(loss["it"], loss["loss"])
         plt.savefig(
-            "trained_rbm/loss_{self.ndim_hidden}_{self.batch_size}.png")
+            f"trained_rbm/loss_{self.ndim_hidden}_{self.batch_size}.png")
         plt.show()
