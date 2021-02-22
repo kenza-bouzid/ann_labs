@@ -32,18 +32,16 @@ class RestrictedBoltzmannMachine():
         self.delta_bias_v = 0
         self.delta_weight_vh = 0
         self.delta_bias_h = 0
-        self.bias_v = np.random.normal(
-            loc=0.0, scale=0.01, size=(self.ndim_visible))
+        self.bias_v = np.zeros(self.ndim_visible)#np.random.normal(loc=0.0, scale=0.01, size=(self.ndim_visible))
         self.weight_vh = np.random.normal(
-            loc=0.0, scale=0.01, size=(self.ndim_visible, self.ndim_hidden))
-        self.bias_h = np.random.normal(
-            loc=0.0, scale=0.01, size=(self.ndim_hidden))
+            loc=0.0, scale=0.1, size=(self.ndim_visible, self.ndim_hidden))
+        self.bias_h = -4*np.ones((1,self.ndim_hidden))#np.random.normal(loc=0.0, scale=0.01, size=(self.ndim_hidden))
         self.delta_weight_v_to_h = 0
         self.delta_weight_h_to_v = 0
         self.weight_v_to_h = None
         self.weight_h_to_v = None
         self.learning_rate = 0.01
-        self.momentum = 0.7
+        self.momentum = 0.0
         self.print_period = 500
 
         self.rf = {  # receptive-fields. Only applicable when visible layer is input data
@@ -53,7 +51,7 @@ class RestrictedBoltzmannMachine():
             "ids": np.random.randint(0, self.ndim_hidden, 36)
         }
 
-    def cd1(self, visible_trainset, n_iterations=10000):
+    def cd1(self, visible_trainset, n_iterations=30000):
         """Contrastive Divergence with k=1 full alternating Gibbs sampling
 
         Args:
@@ -69,8 +67,9 @@ class RestrictedBoltzmannMachine():
         for it in range(n_iterations):
             minibatch_start = it * self.batch_size % n_samples
             minibatch_end = minibatch_start + self.batch_size
-            v0 = visible_trainset[minibatch_start:minibatch_end]
-            ph0, h0 = self.get_h_given_v(v0)
+            
+            v0 = visible_trainset[minibatch_start:minibatch_end,:]
+            _, h0 = self.get_h_given_v(v0)
             pvk, vk = self.get_v_given_h(h0)
             phk, _ = self.get_h_given_v(vk)
             self.update_params(v0, h0, pvk, phk)
@@ -114,9 +113,8 @@ class RestrictedBoltzmannMachine():
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         vh0 = v_0.T @ h_0
         vh1 = v_k.T @ h_k
-        # print('VH0', vh0.shape, "vH1", vh1.shape)
         lr = self.learning_rate/self.batch_size
-        # ?? delta_bias_v and delta_bias_h inversed + replaced += by = 
+
         self.delta_bias_v = self.momentum * self.delta_bias_v + lr * np.sum((v_0 - v_k), axis=0)
         self.delta_weight_vh = self.momentum * self.delta_weight_vh  + lr * (vh0 - vh1)
         self.delta_bias_h = self.momentum * self.delta_bias_h + lr * np.sum((h_0 - h_k), axis=0)
@@ -138,7 +136,7 @@ class RestrictedBoltzmannMachine():
         """
         assert self.weight_vh is not None
         n_samples = visible_minibatch.shape[0]
-        probabilities = sigmoid(self.bias_h + visible_minibatch @  self.weight_vh)
+        probabilities = sigmoid(self.bias_h + visible_minibatch @ self.weight_vh)
         activations = sample_binary(probabilities)
         
         return probabilities, activations
@@ -182,7 +180,7 @@ class RestrictedBoltzmannMachine():
 
         else:
             # print("h", hidden_minibatch.shape, 'W', self.weight_vh.shape, 'B', self.bias_v.shape)
-            probabilities = sigmoid(self.bias_v + hidden_minibatch @  self.weight_vh.T)
+            probabilities = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
             activations = sample_binary(probabilities)
 
         return probabilities, activations
@@ -294,14 +292,17 @@ class RestrictedBoltzmannMachine():
         return
 
     def save_weights(self):
-        np.save("trained_rbm/weights.npy", self.weight_vh)
-        np.save("trained_rbm/bias_v.npy", self.bias_v)
-        np.save("trained_rbm/bias_h.npy", self.bias_h)
+        np.save(f"trained_rbm/weights_{self.ndim_hidden}_{self.batch_size}.npy", self.weight_vh)
+        np.save(
+            f"trained_rbm/bias_v_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_v)
+        np.save(
+            f"trained_rbm/bias_h_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_h)
 
     def plot_loss(self, loss):
         plt.title('Reconstruction loss over training iterations')
         plt.xlabel('iteration')
         plt.ylabel('reconstruction loss')
         plt.plot(loss["it"], loss["loss"])
-        plt.savefig("trained_rbm/loss.png")
+        plt.savefig(
+            "trained_rbm/loss_{self.ndim_hidden}_{self.batch_size}.png")
         plt.show()

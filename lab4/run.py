@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     image_size = [28, 28]
     train_imgs, train_lbls, test_imgs, test_lbls = read_mnist(
-        dim=image_size, n_train=60000, n_test=10000)
+        dim=image_size, n_train=1000, n_test=10000)
 
     # ''' restricted boltzmann machine '''
 
