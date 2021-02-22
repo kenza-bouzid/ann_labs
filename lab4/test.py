@@ -20,9 +20,9 @@ if __name__ == "__main__":
                                      batch_size=20
                                      )
     
-    rbm.weight_vh = np.load("trained_rbm/weights.npy")
-    rbm.bias_v = np.load("trained_rbm/bias_v.npy")
-    rbm.bias_h = np.load("trained_rbm/bias_h.npy")
+    rbm.weight_vh = np.load("trained_rbm/weights_100_20.npy")
+    rbm.bias_v = np.load("trained_rbm/bias_v_100_20..npy")
+    rbm.bias_h = np.load("trained_rbm/bias_h_100_20..npy")
 
 
     fig, axs = plt.subplots(10, 2, figsize=(12, 12))
