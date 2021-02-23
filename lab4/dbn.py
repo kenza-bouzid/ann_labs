@@ -35,7 +35,7 @@ class DeepBeliefNet():
         self.sizes = sizes
         self.image_size = image_size
         self.batch_size = batch_size
-        self.n_gibbs_recog = 15
+        self.n_gibbs_recog = 20
         self.n_gibbs_gener = 200
         self.n_gibbs_wakesleep = 5
         self.print_period = 2000
@@ -53,20 +53,16 @@ class DeepBeliefNet():
         vis = true_img # visible layer gets the image data
         lbl = np.ones(true_lbl.shape)/10. # start the net by telling you know nothing about labels        
         
-        # [TODO TASK 4.2] fix the image data in the visible layer and drive the network bottom to top. In the top RBM, run alternating Gibbs sampling \
-        # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
-        # NOTE : inferring entire train/test set may require too much compute memory (depends on your system). In that case, divide into mini-batches.
-        
-        phid, hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)
-        p_pen, pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(hid)
+        _, hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)
+        _, pen = self.rbm_stack['hid--pen'].get_h_given_v_dir(hid)
 
         vis = np.concatenate((pen, lbl), axis=1)
 
         for _ in range(self.n_gibbs_recog):
-            p_top, top = self.rbm_stack['pen+lbl--top'].get_h_given_v(vis)
-            p_pen, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
+            _, top = self.rbm_stack['pen+lbl--top'].get_h_given_v(vis)
+            p_vis, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
 
-        predicted_lbl = p_pen[:,-n_labels:]
+        predicted_lbl = p_vis[:,-n_labels:]
         print ("accuracy = %.2f%%"%(100.*np.mean(np.argmax(predicted_lbl,axis=1)==np.argmax(true_lbl,axis=1))))  
         return
 
@@ -79,6 +75,7 @@ class DeepBeliefNet():
         """
         
         n_sample = true_lbl.shape[0]
+        n_labels = true_lbl.shape[1]
         
         records = []        
         fig,ax = plt.subplots(1,1,figsize=(3,3))
@@ -87,17 +84,15 @@ class DeepBeliefNet():
 
         lbl = true_lbl
 
-        # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM. From the top RBM, drive the network \ 
-        # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
-        init_pen = np.random.binomial(
+        random_vis = np.random.binomial(
             n=n_sample, p=0.5, size=(n_sample, self.sizes["pen"]))
-        vis = np.concatenate((init_pen, lbl), axis=1)
-        n_labels = self.rbm_stack['pen+lbl--top'].n_labels
+        vis = np.concatenate((random_vis, lbl), axis=1)
         for _ in range(self.n_gibbs_gener):
-            p_top, top = self.rbm_stack['pen+lbl--top'].get_h_given_v(vis)
-            p_v_pen, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
-            p_v_hid , hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(vis[:,:-n_labels])
-            p_img, img = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)
+            _, top = self.rbm_stack['pen+lbl--top'].get_h_given_v(vis)
+            _, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
+
+            _ , hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(vis[:,:-n_labels])
+            _, img = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)
             vis[:,-n_labels:] = lbl
             records.append([ax.imshow(img.reshape(
                 self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None)])
@@ -130,7 +125,7 @@ class DeepBeliefNet():
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
         
         self.rbm_stack["vis--hid"].untwine_weights()
-        ph1, h1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(
+        _, h1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(
             vis_trainset)
         try: 
             self.loadfromfile_rbm(loc="trained_rbm",name="hid--pen")
@@ -140,7 +135,8 @@ class DeepBeliefNet():
             """ 
             CD-1 training for hid--pen 
             """
-            self.rbm_stack["hid--pen"].cd1(visible_trainset=ph1,
+            # changed ph1 to h1
+            self.rbm_stack["hid--pen"].cd1(visible_trainset=h1,
                                            n_iterations=n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
             
@@ -155,70 +151,12 @@ class DeepBeliefNet():
             CD-1 training for pen+lbl--top 
             """
             # p_labels = self.clamp_labels(lbl_trainset)
-            ph2_plabels = np.concatenate((ph2, lbl_trainset), axis=1)
-            self.rbm_stack["pen+lbl--top"].cd1(visible_trainset=ph2_plabels,
+            h2_labels = np.concatenate((h2, lbl_trainset), axis=1)
+            self.rbm_stack["pen+lbl--top"].cd1(visible_trainset=h2_labels,
                                            n_iterations=n_iterations)
             self.savetofile_rbm(loc="trained_rbm",name="pen+lbl--top")            
 
         return    
-    
-    def clamp_labels(self, lbl_trainset):
-        n_samples = lbl_trainset.shape[0]
-        sum_labels = np.sum(lbl_trainset, axis=0) / n_samples
-        p_labels = np.tile(sum_labels, (n_samples,1))
-        p_labels[lbl_trainset == 0] = 0
-        
-        return p_labels
-
-    def train_wakesleep_finetune(self, vis_trainset, lbl_trainset, n_iterations):
-
-        """
-        Wake-sleep method for learning all the parameters of network. 
-        First tries to load previous saved parameters of the entire network.
-
-        Args:
-          vis_trainset: visible data shaped (size of training set, size of visible layer)
-          lbl_trainset: label data shaped (size of training set, size of label layer)
-          n_iterations: number of iterations of learning (each iteration learns a mini-batch)
-        """
-        
-        print ("\ntraining wake-sleep..")
-
-        try :
-            
-            self.loadfromfile_dbn(loc="trained_dbn",name="vis--hid")
-            self.loadfromfile_dbn(loc="trained_dbn",name="hid--pen")
-            self.loadfromfile_rbm(loc="trained_dbn",name="pen+lbl--top")
-            
-        except IOError :            
-
-            self.n_samples = vis_trainset.shape[0]
-
-            for it in range(n_iterations):            
-                                                
-                # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
-
-                # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
-
-                # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
-
-                # [TODO TASK 4.3] compute predictions : compute generative predictions from wake-phase activations, and recognize predictions from sleep-phase activations.
-                # Note that these predictions will not alter the network activations, we use them only to learn the directed connections.
-                
-                # [TODO TASK 4.3] update generative parameters : here you will only use 'update_generate_params' method from rbm class.
-
-                # [TODO TASK 4.3] update parameters of top rbm : here you will only use 'update_params' method from rbm class.
-
-                # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params' method from rbm class.
-
-                if it % self.print_period == 0 : print ("iteration=%7d"%it)
-                        
-            self.savetofile_dbn(loc="trained_dbn",name="vis--hid")
-            self.savetofile_dbn(loc="trained_dbn",name="hid--pen")
-            self.savetofile_rbm(loc="trained_dbn",name="pen+lbl--top")            
-
-        return
-
     
     def loadfromfile_rbm(self,loc,name):
         

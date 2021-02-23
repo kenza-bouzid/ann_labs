@@ -9,7 +9,6 @@ lab2/.ipynb_checkpoints/*
 .ipynb_checkpoints/*
 lab2/images/*
 .vscode/*
-lab4/trained_rbm
 lab4/trained_dbn
 *.png
 lab4/hist

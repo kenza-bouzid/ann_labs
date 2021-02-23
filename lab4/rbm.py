@@ -167,10 +167,10 @@ class RestrictedBoltzmannMachine():
             
             support = self.bias_v + hidden_minibatch @  self.weight_vh.T
             
-            probabilities_labels = softmax(support[:,:-self.n_labels])
+            probabilities_labels = softmax(support[:,-self.n_labels:])
             activations_labels = sample_categorical(probabilities_labels)
 
-            probabilities_h2 = sigmoid(support[:,-self.n_labels:])
+            probabilities_h2 = sigmoid(support[:,:-self.n_labels])
             activations_h2 = sample_binary(probabilities_h2)
             
             probabilities = np.concatenate(
