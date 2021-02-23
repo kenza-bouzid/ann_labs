@@ -62,8 +62,11 @@ class DeepBeliefNet():
             _, top = self.rbm_stack['pen+lbl--top'].get_h_given_v(vis)
             p_vis, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
 
-        predicted_lbl = p_vis[:,-n_labels:]
-        print ("accuracy = %.2f%%"%(100.*np.mean(np.argmax(predicted_lbl,axis=1)==np.argmax(true_lbl,axis=1))))  
+        predicted_prob = p_vis[:,-n_labels:]
+        pred_labels = np.argmax(predicted_prob,axis=1)
+        plot_images(true_img, pred_labels)
+
+        print ("accuracy = %.2f%%"%(100.*np.mean(pred_labels==np.argmax(true_lbl,axis=1))))  
         return
 
     def generate(self,true_lbl,name):
