@@ -1,5 +1,6 @@
 from util import *
 from rbm import RestrictedBoltzmannMachine
+from tqdm import tqdm 
 
 class DeepBeliefNet():    
 
@@ -27,10 +28,10 @@ class DeepBeliefNet():
 
         self.rbm_stack = {
             'vis--hid' : RestrictedBoltzmannMachine(ndim_visible=sizes["vis"], ndim_hidden=sizes["hid"],
-                                                    is_bottom=True, image_size=image_size, batch_size=batch_size),
-            'hid--pen' : RestrictedBoltzmannMachine(ndim_visible=sizes["hid"], ndim_hidden=sizes["pen"], batch_size=batch_size),   
+                                                    is_bottom=True, image_size=image_size, batch_size=batch_size, name='vis--hid'),
+            'hid--pen': RestrictedBoltzmannMachine(ndim_visible=sizes["hid"], ndim_hidden=sizes["pen"], batch_size=batch_size, name='hid--pen'),
             'pen+lbl--top' : RestrictedBoltzmannMachine(ndim_visible=sizes["pen"]+sizes["lbl"], ndim_hidden=sizes["top"],
-                                                        is_top=True, n_labels=n_labels, batch_size=batch_size)
+                                                        is_top=True, n_labels=n_labels, batch_size=batch_size, name='pen+lbl--top')
         }       
         self.sizes = sizes
         self.image_size = image_size
@@ -90,7 +91,7 @@ class DeepBeliefNet():
         random_vis = np.random.binomial(
             n=n_sample, p=0.5, size=(n_sample, self.sizes["pen"]))
         vis = np.concatenate((random_vis, lbl), axis=1)
-        for _ in range(self.n_gibbs_gener):
+        for _ in tqdm(range(self.n_gibbs_gener)):
             _, top = self.rbm_stack['pen+lbl--top'].get_h_given_v(vis)
             _, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
 

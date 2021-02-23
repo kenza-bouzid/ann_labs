@@ -1,12 +1,13 @@
 from util import *
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class RestrictedBoltzmannMachine():
     '''
     For more details : A Practical Guide to Training Restricted Boltzmann Machines https://www.cs.toronto.edu/~hinton/absps/guideTR.pdf
     '''
 
-    def __init__(self, ndim_visible, ndim_hidden, is_bottom=False, image_size=[28, 28], is_top=False, n_labels=10, batch_size=10):
+    def __init__(self, ndim_visible, ndim_hidden, is_bottom=False, image_size=[28, 28], is_top=False, n_labels=10, batch_size=10, name=""):
         """
         Args:
           ndim_visible: Number of units in visible layer.
@@ -17,7 +18,7 @@ class RestrictedBoltzmannMachine():
           n_label: Number of label categories.
           batch_size: Size of mini-batch.
         """
-
+        self.name = name
         self.ndim_visible = ndim_visible
         self.ndim_hidden = ndim_hidden
 
@@ -64,7 +65,7 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_trainset.shape[0]
         print("n_samples", n_samples)
 
-        for it in range(n_iterations):
+        for it in tqdm(range(n_iterations)):
             minibatch_start = it * self.batch_size % n_samples
             minibatch_end = minibatch_start + self.batch_size
             
@@ -95,7 +96,7 @@ class RestrictedBoltzmannMachine():
                       (it, recon_loss["loss"][-1]))
             
         self.plot_loss(recon_loss)
-        self.save_weights()
+        # self.save_weights()
         return
 
     def update_params(self, v_0, h_0, v_k, h_k):
@@ -292,11 +293,11 @@ class RestrictedBoltzmannMachine():
         return
 
     def save_weights(self):
-        np.save(f"trained_rbm/weights_{self.ndim_hidden}_{self.batch_size}.npy", self.weight_vh)
+        np.save(f"trained_rbm/{self.name}_weights_{self.ndim_hidden}_{self.batch_size}.npy", self.weight_vh)
         np.save(
-            f"trained_rbm/bias_v_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_v)
+            f"trained_rbm/{self.name}_bias_v_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_v)
         np.save(
-            f"trained_rbm/bias_h_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_h)
+            f"trained_rbm/{self.name}_bias_h_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_h)
 
     def plot_loss(self, loss):
         plt.title('Reconstruction loss over training iterations')
@@ -304,5 +305,5 @@ class RestrictedBoltzmannMachine():
         plt.ylabel('reconstruction loss')
         plt.plot(loss["it"], loss["loss"])
         plt.savefig(
-            f"trained_rbm/loss_{self.ndim_hidden}_{self.batch_size}.png")
+            f"trained_rbm/{self.name}_loss_{self.ndim_hidden}_{self.batch_size}.png")
         plt.show()

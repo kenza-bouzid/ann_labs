@@ -30,17 +30,18 @@ if __name__ == "__main__":
     dbn = DeepBeliefNet(sizes={"vis": image_size[0]*image_size[1], "hid": 500, "pen": 500, "top": 2000, "lbl": 10},
                         image_size=image_size,
                         n_labels=10,
-                        batch_size=10
+                        batch_size=20
                         )
 
     ''' greedy layer-wise training '''
 
     dbn.train_greedylayerwise(vis_trainset=train_imgs,
-                              lbl_trainset=train_lbls, n_iterations=60000)
+                              lbl_trainset=train_lbls, n_iterations=90000)
 
     dbn.recognize(train_imgs[:1000, :], train_lbls[:1000, :])
 
-    # dbn.recognize(test_imgs, test_lbls)
+    dbn.recognize(test_imgs, test_lbls)
+    
 
     # for digit in range(10):
     #     digit_1hot = np.zeros(shape=(1, 10))
