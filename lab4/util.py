@@ -149,7 +149,7 @@ def plot_images(img, label, max=30):
     plt.show()
 
 def plot_generated(img, label, dirname = 'rand_pen'):
-    fig = plt.figure(figsize=(28, 28))
+    fig = plt.figure(figsize=(20, 8))
     rows = 2
     columns = 5
     for i in range(1, rows * columns + 1):
