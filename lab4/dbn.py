@@ -96,7 +96,7 @@ class DeepBeliefNet():
             _, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
 
             _ , hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(vis[:,:-n_labels])
-            p_img, _ = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)
+            p_img, img = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)
             vis[:,-n_labels:] = lbl
             records.append([ax.imshow(p_img.reshape(
                 self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None)])
