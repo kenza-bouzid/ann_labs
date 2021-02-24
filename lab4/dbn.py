@@ -70,14 +70,14 @@ class DeepBeliefNet():
         print ("accuracy = %.2f%%"%(100.*np.mean(pred_labels==np.argmax(true_lbl,axis=1))))  
         return
 
-    def generate(self,true_lbl,name):
+    def generate(self,true_lbl,name, init_random_pen=True):
         """Generate data from labels
 
         Args:
           true_lbl: true labels shaped (number of samples, size of label layer)
           name: string used for saving a video of generated visible activations
         """
-        
+        np.random.seed(42)
         n_sample = true_lbl.shape[0]
         n_labels = true_lbl.shape[1]
         
@@ -88,9 +88,17 @@ class DeepBeliefNet():
 
         lbl = true_lbl
 
-        random_vis = np.random.binomial(
-            n=n_sample, p=0.5, size=(n_sample, self.sizes["pen"]))
-        vis = np.concatenate((random_vis, lbl), axis=1)
+        if init_random_pen:
+            pen_input = np.random.binomial(
+                n=n_sample, p=0.5, size=(n_sample, self.sizes["pen"]))
+        else:
+            random_img = np.random.binomial(
+                n=n_sample, p=0.5, size=(n_sample, self.sizes["vis"]))
+            _, hid = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)
+            _, pen_input = self.rbm_stack['hid--pen'].get_h_given_v_dir(hid)
+
+
+        vis = np.concatenate((pen_input, lbl), axis=1)
         for _ in tqdm(range(self.n_gibbs_gener)):
             _, top = self.rbm_stack['pen+lbl--top'].get_h_given_v(vis)
             _, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
@@ -101,7 +109,11 @@ class DeepBeliefNet():
             records.append([ax.imshow(p_img.reshape(
                 self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None)])
             
-        anim = stitch_video(fig,records).save("hist/%s.generate%d.mp4"%(name,np.argmax(true_lbl)))            
+        if init_random_pen:
+            anim = stitch_video(fig,records).save("hist/rand_pen/%s.generate%d.mp4"%(name,np.argmax(true_lbl)))            
+        else:
+            anim = stitch_video(fig,records).save("hist/rand_img/%s.generate%d.mp4"%(name,np.argmax(true_lbl)))  
+        return p_img          
             
 
     def train_greedylayerwise(self, vis_trainset, lbl_trainset, n_iterations):

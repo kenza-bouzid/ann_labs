@@ -1,3 +1,4 @@
+from matplotlib.pyplot import title
 from util import *
 from rbm import RestrictedBoltzmannMachine
 from dbn import DeepBeliefNet
@@ -38,15 +39,24 @@ if __name__ == "__main__":
     dbn.train_greedylayerwise(vis_trainset=train_imgs,
                               lbl_trainset=train_lbls, n_iterations=90000)
 
-    dbn.recognize(train_imgs[:1000, :], train_lbls[:1000, :])
+    # dbn.recognize(train_imgs[:1000, :], train_lbls[:1000, :])
 
-    dbn.recognize(test_imgs, test_lbls)
+    # dbn.recognize(test_imgs, test_lbls)
     
 
-    # for digit in range(10):
-    #     digit_1hot = np.zeros(shape=(1, 10))
-    #     digit_1hot[0, digit] = 1
-    #     dbn.generate(digit_1hot, name="rbms")
+    imgs = []
+    for digit in range(10):
+        digit_1hot = np.zeros(shape=(1, 10))
+        digit_1hot[0, digit] = 1
+        imgs.append(dbn.generate(digit_1hot, name="rbms", init_random_pen=True))
+    plot_generated(np.array(imgs), np.array([i for i in range(10)]))
+
+    imgs = []
+    for digit in range(10):
+        digit_1hot = np.zeros(shape=(1, 10))
+        digit_1hot[0, digit] = 1
+        imgs.append(dbn.generate(digit_1hot, name="rbms", init_random_pen=False))
+    plot_generated(np.array(imgs), np.array([i for i in range(10)]), dirname='rand_img')
 
     # ''' fine-tune wake-sleep training '''
 

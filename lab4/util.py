@@ -143,7 +143,19 @@ def plot_images(img, label, max=30):
     columns = 10
     for i in range(1, rows * columns + 1):
         fig.add_subplot(rows, columns, i)
-        plt.title("Predicted: " + str(int(label[i-1])))
+        plt.title(title + str(int(label[i-1])))
         plt.imshow(img[i - 1].reshape(28, 28))
 
     plt.show()
+
+def plot_generated(img, label, dirname = 'rand_pen'):
+    fig = plt.figure(figsize=(28, 28))
+    rows = 2
+    columns = 5
+    for i in range(1, rows * columns + 1):
+        fig.add_subplot(rows, columns, i)
+        plt.title('Number: ' + str(int(label[i-1])))
+        plt.imshow(img[i-1].reshape(28, 28))
+
+    plt.savefig("hist/" + dirname + "/generated_imgs.png")
+    plt.close('all')
