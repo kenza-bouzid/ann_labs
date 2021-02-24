@@ -96,9 +96,9 @@ class DeepBeliefNet():
             _, vis = self.rbm_stack['pen+lbl--top'].get_v_given_h(top)
 
             _ , hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(vis[:,:-n_labels])
-            _, img = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)
+            p_img, _ = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)
             vis[:,-n_labels:] = lbl
-            records.append([ax.imshow(img.reshape(
+            records.append([ax.imshow(p_img.reshape(
                 self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True, interpolation=None)])
             
         anim = stitch_video(fig,records).save("hist/%s.generate%d.mp4"%(name,np.argmax(true_lbl)))            
@@ -121,42 +121,30 @@ class DeepBeliefNet():
             self.loadfromfile_rbm(loc="trained_rbm",name="vis--hid")
         except IOError :
             print("training vis--hid")
-            """ 
-            CD-1 training for vis--hid 
-            """
             self.rbm_stack['vis--hid'].cd1(
                 visible_trainset=vis_trainset, n_iterations=n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
         
         self.rbm_stack["vis--hid"].untwine_weights()
-        _, h1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(
+        ph1, _ = self.rbm_stack['vis--hid'].get_h_given_v_dir(
             vis_trainset)
         try: 
             self.loadfromfile_rbm(loc="trained_rbm",name="hid--pen")
             
         except IOError :
             print("training hid--pen")
-            """ 
-            CD-1 training for hid--pen 
-            """
-            # changed ph1 to h1
-            self.rbm_stack["hid--pen"].cd1(visible_trainset=h1,
+            self.rbm_stack["hid--pen"].cd1(visible_trainset=ph1,
                                            n_iterations=n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
             
         self.rbm_stack["hid--pen"].untwine_weights()
-        ph2, h2 = self.rbm_stack['hid--pen'].get_h_given_v_dir(h1)
+        ph2, _ = self.rbm_stack['hid--pen'].get_h_given_v_dir(ph1)
         try:
             self.loadfromfile_rbm(loc="trained_rbm",name="pen+lbl--top")        
         except IOError :
-
             print ("training pen+lbl--top")
-            """ 
-            CD-1 training for pen+lbl--top 
-            """
-            # p_labels = self.clamp_labels(lbl_trainset)
-            h2_labels = np.concatenate((h2, lbl_trainset), axis=1)
-            self.rbm_stack["pen+lbl--top"].cd1(visible_trainset=h2_labels,
+            ph2_labels = np.concatenate((ph2, lbl_trainset), axis=1)
+            self.rbm_stack["pen+lbl--top"].cd1(visible_trainset=ph2_labels,
                                            n_iterations=n_iterations)
             self.savetofile_rbm(loc="trained_rbm",name="pen+lbl--top")            
 
