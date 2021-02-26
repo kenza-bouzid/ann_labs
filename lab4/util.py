@@ -138,12 +138,12 @@ def stitch_video(fig, imgs):
 def plot_images(img, label, max=30):
     if img.shape[0] > max:
         img = img[0:max]
-    fig = plt.figure(figsize=(28, 28))
+    fig = plt.figure(figsize=(28, 8))
     rows = int(img.shape[0] / 10)
     columns = 10
     for i in range(1, rows * columns + 1):
         fig.add_subplot(rows, columns, i)
-        plt.title(title + str(int(label[i-1])))
+        plt.title('Prediction: ' + str(int(label[i-1])))
         plt.imshow(img[i - 1].reshape(28, 28))
 
     plt.show()
