@@ -1,12 +1,13 @@
 from util import *
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class RestrictedBoltzmannMachine():
     '''
     For more details : A Practical Guide to Training Restricted Boltzmann Machines https://www.cs.toronto.edu/~hinton/absps/guideTR.pdf
     '''
 
-    def __init__(self, ndim_visible, ndim_hidden, is_bottom=False, image_size=[28, 28], is_top=False, n_labels=10, batch_size=10):
+    def __init__(self, ndim_visible, ndim_hidden, is_bottom=False, image_size=[28, 28], is_top=False, n_labels=10, batch_size=10, name=""):
         """
         Args:
           ndim_visible: Number of units in visible layer.
@@ -17,7 +18,7 @@ class RestrictedBoltzmannMachine():
           n_label: Number of label categories.
           batch_size: Size of mini-batch.
         """
-
+        self.name = name
         self.ndim_visible = ndim_visible
         self.ndim_hidden = ndim_hidden
 
@@ -64,7 +65,7 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_trainset.shape[0]
         print("n_samples", n_samples)
 
-        for it in range(n_iterations):
+        for it in tqdm(range(n_iterations)):
             minibatch_start = it * self.batch_size % n_samples
             minibatch_end = minibatch_start + self.batch_size
             
@@ -95,7 +96,7 @@ class RestrictedBoltzmannMachine():
                       (it, recon_loss["loss"][-1]))
             
         self.plot_loss(recon_loss)
-        self.save_weights()
+        # self.save_weights()
         return
 
     def update_params(self, v_0, h_0, v_k, h_k):
@@ -109,8 +110,6 @@ class RestrictedBoltzmannMachine():
            h_k: activities or probabilities of hidden layer
            all args have shape (size of mini-batch, size of respective layer)
         """
-
-        # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         vh0 = v_0.T @ h_0
         vh1 = v_k.T @ h_k
         lr = self.learning_rate/self.batch_size
@@ -139,7 +138,6 @@ class RestrictedBoltzmannMachine():
         probabilities = sigmoid(self.bias_h + visible_minibatch @ self.weight_vh)
         activations = sample_binary(probabilities)
         
-
         return probabilities, activations
 
     def get_v_given_h(self, hidden_minibatch):
@@ -155,21 +153,26 @@ class RestrictedBoltzmannMachine():
         n_samples = hidden_minibatch.shape[0]
 
         if self.is_top:
-
             """
             Here visible layer has both data and labels. Compute total input for each unit (identical for both cases), \ 
             and split into two parts, something like support[:, :-self.n_labels] and support[:, -self.n_labels:]. \
             Then, for both parts, use the appropriate activation function to get probabilities and a sampling method \
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
+            support = self.bias_v + hidden_minibatch @  self.weight_vh.T
+            
+            probabilities_labels = softmax(support[:,-self.n_labels:])
+            activations_labels = sample_categorical(probabilities_labels)
 
-            # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
-            # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
-
-            pass
+            probabilities_h2 = sigmoid(support[:,:-self.n_labels])
+            activations_h2 = sample_binary(probabilities_h2)
+            
+            probabilities = np.concatenate(
+                (probabilities_h2, probabilities_labels), axis=1)
+            activations = np.concatenate(
+                (activations_h2, activations_labels), axis=1)
 
         else:
-            # print("h", hidden_minibatch.shape, 'W', self.weight_vh.shape, 'B', self.bias_v.shape)
             probabilities = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
             activations = sample_binary(probabilities)
 
@@ -177,7 +180,7 @@ class RestrictedBoltzmannMachine():
 
     """ rbm as a belief layer : the functions below do not have to be changed until running a deep belief net """
 
-    def untwine_weights(self):
+    def untwine_weights(self):  
         self.weight_v_to_h = np.copy(self.weight_vh)
         self.weight_h_to_v = np.copy(np.transpose(self.weight_vh))
         self.weight_vh = None
@@ -195,10 +198,11 @@ class RestrictedBoltzmannMachine():
         """
         assert self.weight_v_to_h is not None
         n_samples = visible_minibatch.shape[0]
+        probabilities = sigmoid(self.bias_h + visible_minibatch @  self.weight_v_to_h)
+        activations = sample_binary(probabilities)
+        
+        return probabilities, activations
 
-        # [TODO TASK 4.2] perform same computation as the function 'get_h_given_v' but with directed connections (replace the zeros below)
-
-        return np.zeros((n_samples, self.ndim_hidden)), np.zeros((n_samples, self.ndim_hidden))
 
     def get_v_given_h_dir(self, hidden_minibatch):
         """Compute probabilities p(v|h) and activations v ~ p(v|h)
@@ -223,20 +227,14 @@ class RestrictedBoltzmannMachine():
             Then, for both parts, use the appropriate activation function to get probabilities and a sampling method \
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
-
-            # [TODO TASK 4.2] Note that even though this function performs same computation as 'get_v_given_h' but with directed connections,
-            # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
-            # Appropriate code here is to raise an error (replace pass below)
-
-            pass
+            raise Exception('Top DBN is a bipartite undirected graph!')
 
         else:
+            probabilities = sigmoid(self.bias_v + hidden_minibatch @  self.weight_h_to_v)
+            activations = sample_binary(probabilities)
 
-            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
+        return probabilities, activations
 
-            pass
-
-        return np.zeros((n_samples, self.ndim_visible)), np.zeros((n_samples, self.ndim_visible))
 
     def update_generate_params(self, inps, trgs, preds):
         """Update generative weight "weight_h_to_v" and bias "bias_v"
@@ -279,11 +277,11 @@ class RestrictedBoltzmannMachine():
         return
 
     def save_weights(self):
-        np.save(f"trained_rbm/weights_{self.ndim_hidden}_{self.batch_size}.npy", self.weight_vh)
+        np.save(f"trained_rbm/{self.name}_weights_{self.ndim_hidden}_{self.batch_size}.npy", self.weight_vh)
         np.save(
-            f"trained_rbm/bias_v_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_v)
+            f"trained_rbm/{self.name}_bias_v_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_v)
         np.save(
-            f"trained_rbm/bias_h_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_h)
+            f"trained_rbm/{self.name}_bias_h_{self.ndim_hidden}_{self.batch_size}.npy", self.bias_h)
 
     def plot_loss(self, loss):
         plt.title('Reconstruction loss over training iterations')
@@ -291,5 +289,5 @@ class RestrictedBoltzmannMachine():
         plt.ylabel('reconstruction loss')
         plt.plot(loss["it"], loss["loss"])
         plt.savefig(
-            f"trained_rbm/loss_{self.ndim_hidden}_{self.batch_size}.png")
+            f"trained_rbm/{self.name}_loss_{self.ndim_hidden}_{self.batch_size}.png")
         plt.show()
