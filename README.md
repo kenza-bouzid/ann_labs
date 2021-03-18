@@ -17,7 +17,7 @@ network for chaotic time-series prediction
 
 ## Lab2 - Radial basis functions, competitive learning and self-organisation
 
-- Function approximation with RBF
+- Function approximation with RBF Network
 - Radial Basis Function trained with competitive learing
 - Self-organising maps used for data cluserisation and visualisation  
 
