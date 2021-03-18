@@ -110,8 +110,6 @@ class RestrictedBoltzmannMachine():
            h_k: activities or probabilities of hidden layer
            all args have shape (size of mini-batch, size of respective layer)
         """
-
-        # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         vh0 = v_0.T @ h_0
         vh1 = v_k.T @ h_k
         lr = self.learning_rate/self.batch_size
@@ -155,17 +153,12 @@ class RestrictedBoltzmannMachine():
         n_samples = hidden_minibatch.shape[0]
 
         if self.is_top:
-
             """
             Here visible layer has both data and labels. Compute total input for each unit (identical for both cases), \ 
             and split into two parts, something like support[:, :-self.n_labels] and support[:, -self.n_labels:]. \
             Then, for both parts, use the appropriate activation function to get probabilities and a sampling method \
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
-
-            # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
-            # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
-            
             support = self.bias_v + hidden_minibatch @  self.weight_vh.T
             
             probabilities_labels = softmax(support[:,-self.n_labels:])
@@ -180,7 +173,6 @@ class RestrictedBoltzmannMachine():
                 (activations_h2, activations_labels), axis=1)
 
         else:
-            # print("h", hidden_minibatch.shape, 'W', self.weight_vh.shape, 'B', self.bias_v.shape)
             probabilities = sigmoid(self.bias_v + hidden_minibatch @ self.weight_vh.T)
             activations = sample_binary(probabilities)
 
@@ -235,17 +227,9 @@ class RestrictedBoltzmannMachine():
             Then, for both parts, use the appropriate activation function to get probabilities and a sampling method \
             to get activities. The probabilities as well as activities can then be concatenated back into a normal visible layer.
             """
-
-            # [TODO TASK 4.2] Note that even though this function performs same computation as 'get_v_given_h' but with directed connections,
-            # this case should never be executed : when the RBM is a part of a DBN and is at the top, it will have not have directed connections.
-            # Appropriate code here is to raise an error (replace pass below)
-            
             raise Exception('Top DBN is a bipartite undirected graph!')
 
         else:
-
-            # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)
-
             probabilities = sigmoid(self.bias_v + hidden_minibatch @  self.weight_h_to_v)
             activations = sample_binary(probabilities)
 
