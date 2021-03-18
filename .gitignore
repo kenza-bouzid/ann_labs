@@ -7,7 +7,7 @@ __pycache__/
 .ipynb_checkpoints/
 .vscode/*
 
-lab2/images/
+lab2/images
 lab4/trained_dbn
 lab4/hist
 lab4/trained_rbm
